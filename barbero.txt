@@ -1,0 +1,53 @@
+program barbero;
+var mutex,clientes,barber :semaphore;
+var n,enespera : integer;
+process type barbero;
+begin
+	repeat
+	while enespera <> 0 do
+	begin
+		wait(clientes);
+		wait(mutex);
+		enespera:=enespera-1;
+		signal(barber);
+		signal(mutex);
+		writeln(' Barbero cortando el cabello ');
+	end
+	forever
+end;
+
+process type clientela;
+begin
+	repeat
+	wait(mutex);
+	if (enespera < n) then
+		begin
+		enespera:=enespera+1;
+		write('Esperando');
+		signal(clientes);
+		signal(mutex);
+		wait(barber);
+		end
+	else
+		begin
+		signal(mutex);
+		end;
+	forever
+end;
+VAR BR: array[0..1] OF barbero;
+var C: array[0..4] of clientela;
+begin
+	initial(mutex,1);
+	initial(clientes,0);
+	initial(barber,0);
+	enespera:=0;
+	n:=5;
+	cobegin
+		C[0];
+		C[1];
+		C[2];
+		C[3];
+		C[4];
+		BR[1];
+	coend
+end.

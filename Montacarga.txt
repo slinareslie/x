@@ -1,0 +1,50 @@
+program Montacargas;
+
+var
+    mutex, montacargas: semaphore;
+    pesoActual: integer;
+
+process type vehiculo;
+    var peso: integer;
+    begin
+        (* Generar el peso aleatorio del vehículo *)
+        peso := random(11) + 10;
+
+        (* Protocolo de entrada al montacargas *)
+        wait(mutex);
+
+        (* Verificar si el montacargas está lleno *)
+        if pesoActual + peso <= 50 then
+        begin
+            pesoActual := pesoActual + peso;
+            writeln('Vehículo con peso ', peso, ' toneladas ingresando al montacargas.');
+        end
+        else
+            writeln('Vehículo con peso ', peso, ' toneladas no puede ingresar. Montacargas lleno.');
+
+        (* Protocolo de salida del montacargas *)
+        signal(mutex);
+
+        (* Si el montacargas está lleno, el vehículo parte *)
+        if pesoActual >= 50 then
+        begin
+            wait(montacargas);
+            writeln('Montacargas lleno. El montacargas está partiendo.');
+            pesoActual := 0;
+            signal(montacargas);
+        end;
+    end;
+
+var
+    i: integer;
+    vehiculos1: array[0..9] of Vehiculo;
+
+begin
+    pesoActual := 0;
+    initial(mutex, 1);
+    initial(montacargas, 1);
+    cobegin
+        for i := 0 to 9 do
+            vehiculos1[i];
+    coend
+end.

@@ -1,0 +1,61 @@
+import re
+import pandas as pd
+import matplotlib.pyplot as plt
+from collections import Counter
+
+# Cargar y leer el archivo
+file_path = "/mnt/data/Chat de WhatsApp con Manifiestos Tacna.txt"
+with open(file_path, "r", encoding="utf-8") as file:
+    chat_lines = file.readlines()
+
+# Expresión regular para detectar mensajes con fecha, hora y usuario
+pattern = re.compile(r"(\d{1,2}/\d{1,2}/\d{4}), (\d{1,2}:\d{2} [ap]\. m\.) - (.*?): (.*)")
+
+messages = []
+times = []
+users = []
+
+for line in chat_lines:
+    match = pattern.match(line)
+    if match:
+        date, time, user, message = match.groups()
+        messages.append(message)
+        times.append(time)
+        users.append(user)
+
+# Convertir horas a formato de 24 horas para análisis
+def convert_to_24_hour(time_str):
+    time, period = time_str.split(" ")
+    hour, minute = map(int, time.split(":"))
+    if period == "p. m." and hour != 12:
+        hour += 12
+    if period == "a. m." and hour == 12:
+        hour = 0
+    return hour
+
+hours = [convert_to_24_hour(t) for t in times]
+
+# Estadísticas
+message_counts = Counter(users)
+hour_distribution = Counter(hours)
+
+# Mostrar estadísticas generales
+print(f"Total de mensajes: {len(messages)}")
+print(f"Usuarios únicos: {len(message_counts)}")
+print("Mensajes por usuario:")
+for user, count in message_counts.most_common(10):
+    print(f"{user}: {count}")
+
+# Hora con mayor actividad
+peak_hour = max(hour_distribution, key=hour_distribution.get)
+print(f"Hora con mayor actividad: {peak_hour}:00")
+
+# Graficar distribución de mensajes por hora
+plt.figure(figsize=(10, 5))
+plt.bar(hour_distribution.keys(), hour_distribution.values(), color="skyblue")
+plt.xlabel("Hora del día")
+plt.ylabel("Cantidad de mensajes")
+plt.title("Distribución de mensajes por hora")
+plt.xticks(range(0, 24))
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.show()

@@ -1,0 +1,25 @@
+Agregar
+Patch(
+    NombreDeLaTabla,      // El nombre de la tabla de Excel
+    Defaults(NombreDeLaTabla),   // Crear un nuevo registro
+    {
+        Campo1: TextInput1.Text,  // Asigna el valor del campo 1 (que es el valor ingresado en el TextInput)
+        Campo2: TextInput2.Text   // Asigna el valor del campo 2 (otro valor ingresado)
+    }
+);
+
+Actualizar
+Patch(
+    NombreDeLaTabla,         // El nombre de la tabla de Excel
+    SelectedRecord,          // El registro que estás editando (puede ser seleccionado en una lista)
+    {
+        Campo1: TextInput1.Text,  // Actualiza el valor del campo 1
+        Campo2: TextInput2.Text   // Actualiza el valor del campo 2
+    }
+);
+
+Eliminar
+Remove(
+    NombreDeLaTabla,      // El nombre de la tabla de Excel
+    SelectedRecord        // El registro que deseas eliminar
+);

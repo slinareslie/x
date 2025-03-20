@@ -1,23 +1,22 @@
-$outputExcel = "$inputFolder\" + [System.IO.Path]::GetFileNameWithoutExtension($inputXls) + ".xlsx"
+$data = @()
+for ($row = 2; $row -le $sourceSheet.UsedRange.Rows.Count; $row++) {
+    $rowData = @()
+    for ($col = 1; $col -le $sourceSheet.UsedRange.Columns.Count; $col++) {
+        if ($col -eq 12 -or $col -eq 13) {  # Columnas L (12) y M (13)
+            $rowData += $sourceSheet.Cells.Item($row, $col).Value2
+        } else {
+            $rowData += $sourceSheet.Cells.Item($row, $col).Text
+        }
+    }
+    $data += ,$rowData
+}
 
 
-$workbook.SaveAs($outputExcel, 51)  # 51 = formato XLSX
 
 
-# Obtener el nombre base del archivo original
-$outputExcel = "$inputFolder\" + [System.IO.Path]::GetFileNameWithoutExtension($inputXls) + ".xlsx"
+# Aplicar formato decimal solo a las columnas L y M
+$rangeL = $worksheet.Range("L4", $worksheet.Cells.Item($data.Length + 3, 12))
+$rangeL.NumberFormat = "0.00"  
 
-# Guardar el archivo con el mismo nombre, pero en formato XLSX
-$workbook.SaveAs($outputExcel, 51)
-
-# Cerrar el libro y la aplicación de Excel
-$workbook.Close($false)
-$excel.Quit()
-
-# Liberar memoria de los objetos COM
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheetStats) | Out-Null
-
-Write-Host "Proceso completado. Archivo Excel guardado en: $outputExcel"
+$rangeM = $worksheet.Range("M4", $worksheet.Cells.Item($data.Length + 3, 13))
+$rangeM.NumberFormat = "0.00"

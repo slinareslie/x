@@ -1,0 +1,35 @@
+$sourceExcel = New-Object -ComObject Excel.Application
+$sourceExcel.Visible = $false
+$sourceWorkbook = $sourceExcel.Workbooks.Open($inputXls)
+$sourceSheet = $sourceWorkbook.Sheets.Item(1)  # Suponiendo que los datos están en la primera hoja
+
+
+
+$headers = @()
+for ($col = 1; $col -le $sourceSheet.UsedRange.Columns.Count; $col++) {
+    $headers += $sourceSheet.Cells.Item(1, $col).Text
+}
+
+
+$data = @()
+for ($row = 2; $row -le $sourceSheet.UsedRange.Rows.Count; $row++) {
+    $rowData = @()
+    for ($col = 1; $col -le $sourceSheet.UsedRange.Columns.Count; $col++) {
+        $rowData += $sourceSheet.Cells.Item($row, $col).Text
+    }
+    $data += ,$rowData
+}
+
+
+for ($row = 0; $row -lt $data.Length; $row++) {
+    for ($col = 0; $col -lt $headers.Length; $col++) {
+        $worksheet.Cells.Item($row + 3, $col + 1).Value2 = $data[$row][$col]
+    }
+}
+
+
+$sourceWorkbook.Close($false)
+$sourceExcel.Quit()
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($sourceSheet) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($sourceWorkbook) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($sourceExcel) | Out-Null

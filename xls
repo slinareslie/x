@@ -1,0 +1,62 @@
+# ====================== CONFIGURACIÓN ======================
+
+# Definir la ruta del archivo XLS de entrada y la ruta del archivo XLSX de salida
+$inputXls = "D:\Sunat\Automatizar Excel SQL\extraerFecha.xls"
+$outputExcel = "D:\Sunat\Automatizar Excel SQL\extraerFecha1.xlsx"
+
+# ====================== INICIAR EXCEL ======================
+
+# Crear una instancia de Excel
+$excel = New-Object -ComObject Excel.Application
+$excel.Visible = $false
+$workbook = $excel.Workbooks.Open($inputXls)
+
+# Obtener la primera hoja del archivo
+$worksheet = $workbook.Sheets.Item(1)
+
+# Leer los datos de las columnas A y B (P y Fecha)
+$lastRow = $worksheet.Cells.Item($worksheet.Rows.Count, 1).End(-4162).Row  # Buscar la última fila de la columna A
+
+# ====================== CREAR NUEVO LIBRO DE TRABAJO ======================
+
+# Crear un nuevo archivo Excel en blanco
+$newWorkbook = $excel.Workbooks.Add()
+$newWorksheet = $newWorkbook.Sheets.Item(1)
+
+# Escribir encabezados en el nuevo archivo
+$newWorksheet.Cells.Item(1, 1).Value2 = "P"
+$newWorksheet.Cells.Item(1, 2).Value2 = "Fecha"
+$newWorksheet.Cells.Item(1, 1).Font.Bold = $true
+$newWorksheet.Cells.Item(1, 2).Font.Bold = $true
+
+# Copiar los datos de las columnas A y B del archivo original
+for ($row = 2; $row -le $lastRow; $row++) {
+    $newWorksheet.Cells.Item($row, 1).Value2 = $worksheet.Cells.Item($row, 1).Value2  # Columna A (P)
+    $newWorksheet.Cells.Item($row, 2).Value2 = $worksheet.Cells.Item($row, 2).Value2  # Columna B (Fecha)
+}
+
+# Ajustar el formato de las fechas en la columna B
+$newWorksheet.Columns.Item(2).NumberFormat = "m/d/yyyy h:mm:ss AM/PM"  # Formato de fecha y hora
+
+# Ajustar el ancho de las columnas para que se muestre correctamente la fecha
+$newWorksheet.Columns.Item(1).AutoFit()
+$newWorksheet.Columns.Item(2).AutoFit()
+
+# ====================== GUARDAR Y CERRAR EXCEL ======================
+
+# Guardar el archivo en formato XLSX
+$newWorkbook.SaveAs($outputExcel, 51)  # 51 es el formato para .xlsx
+
+# Cerrar el libro y la aplicación de Excel
+$newWorkbook.Close($false)
+$workbook.Close($false)
+$excel.Quit()
+
+# Liberar objetos COM de memoria
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($newWorkbook) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($newWorksheet) | Out-Null
+
+Write-Host "Proceso completado. El archivo Excel se ha guardado en: $outputExcel"

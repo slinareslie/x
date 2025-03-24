@@ -1,47 +1,28 @@
-$servidor = "tu_servidor"
-$usuario = "tu_usuario"
-$contraseña = "tu_contraseña"
-$baseDatos = "tu_base_de_datos"
-$consulta = "SELECT * FROM tabla"
-
-# Ruta de salida del archivo CSV
-$archivoCSV = "$PSScriptRoot\salida.csv"
-
-# Ejecutar SQLCMD y exportar datos
-$sqlcmd = "sqlcmd -S $servidor -d $baseDatos -U $usuario -P $contraseña -Q `"SELECT * FROM tabla`" -o `"$archivoCSV`" -W -s `"`,"
-Invoke-Expression $sqlcmd
-
-Write-Host "Datos descargados en: $archivoCSV"
-
-
-Install-Module -Name ps2exe -Scope CurrentUser
-
-
-
-
-ps2exe.ps1 -inputFile descargar_datos.ps1 -outputFile descargar_datos.exe -noConsole
-
-
-Opción 2
-
-"tu_contraseña" | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString | Out-File credenciales.sec
-
 $Key = New-Object Byte[] 32
 [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($Key)
-$Key | Out-File key.bin
+$Key | Out-File "key.bin"
 
 
-# Cargar clave de cifrado
-$Key = Get-Content key.bin
 
-# Leer la contraseña cifrada y descifrarla
-$Creds = Get-Content credenciales.sec | ConvertTo-SecureString -Key $Key
-$Pass = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Creds))
+$Key = Get-Content "key.bin"
+$SecurePass = "tu_contraseña" | ConvertTo-SecureString -AsPlainText -Force
+$EncryptedPass = $SecurePass | ConvertFrom-SecureString -Key $Key
+$EncryptedPass | Out-File "clave.sec"
 
-# Definir usuario y servidor
-$User = "tu_usuario"
+
+
+
+# Cargar clave y contraseña cifrada
+$Key = Get-Content "$PSScriptRoot\key.bin"
+$SecurePass = Get-Content "$PSScriptRoot\clave.sec" | ConvertTo-SecureString -Key $Key
+$Creds = New-Object System.Management.Automation.PSCredential ("tu_usuario", $SecurePass)
+
+# Datos de la conexión
 $Servidor = "tu_servidor"
 $BaseDatos = "tu_base_de_datos"
 
-# Ejecutar la consulta y guardar en CSV
-sqlcmd -S $Servidor -d $BaseDatos -U $User -P $Pass -Q "SELECT * FROM tabla" -o "salida.csv" -W -s ","
+# Ejecutar consulta SQL
+$ComandoSQL = "sqlcmd -S $Servidor -d $BaseDatos -U $Creds.UserName -P $($Creds.GetNetworkCredential().Password) -Q `"SELECT * FROM tabla`" -o `"$PSScriptRoot\salida.csv`" -W -s `"`,"
+Invoke-Expression $ComandoSQL
+
+Write-Host "Consulta ejecutada. Datos guardados en salida.csv"

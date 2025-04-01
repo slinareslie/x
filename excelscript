@@ -1,1 +1,2 @@
-=SI(VALOR(DERECHA(N2; LARGO(N2) - HALLAR("-"; N2; HALLAR("-"; N2; HALLAR("-"; N2) + 1) + 1))) = MIN(SI(A:A=A2; VALOR(DERECHA(N:N; LARGO(N:N) - HALLAR("-"; N:N; HALLAR("-"; N:N; HALLAR("-"; N:N) + 1) + 1))))); "Mantener"; "Descartar")
+=SI(SUMA(CONTAR.BLANCO(B2:T2)) = MIN(SI(A:A=A2; SUMA(CONTAR.BLANCO(B:B:T:T)))); "Mantener"; "Descartar")
+ 

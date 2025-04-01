@@ -1,2 +1,1 @@
-=SI(SUMA(CONTAR.BLANCO(B2:T2)) = MIN(SI(A:A=A2; SUMA(CONTAR.BLANCO(B:B:T:T)))); "Mantener"; "Descartar")
- 
+=SUMA(SI(B2:T2<>"",1,0))

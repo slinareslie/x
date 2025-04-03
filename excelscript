@@ -23,3 +23,9 @@ WHERE
     AND B.FFIN >= 20250501
     AND A.CEMPTI IN ('0030')
     AND A.CESTADO = '01';
+
+
+Servidor: tutupaca.unjbg.edu.pe
+DBN: bioterio6
+User: user_bioterio6
+Contraseña: 12345678

@@ -1,28 +1,38 @@
-SELECT 
-    a.CEMPTI AS CODIGO, 
-    a.DNOMBRE AS EMPTRANSPINTER, 
-    a.DDIRECCION AS DIRECCION, 
-    a.CESTADO AS ESTADO,
-    a.CRESAUTORI, 
-    a.FINICIO, 
-    a.FFIN, 
-    a.CPAIS AS PAIS, 
-    a.CTIPODOC AS TIPODOC, 
-    a.CNRODOC AS NRODOC, 
-    b.REPRESENTATE, 
-    b.FECINI_REP, 
-    b.FECFIN_REP
-FROM 
-    EMPREDTI A, 
-    REP_LEGAL B
-WHERE 
-    A.CEMPTI = B.COD_OPERADOR
-    AND B.tip_operador = 'E'
-    AND A.FFIN >= 20250501 
-    AND A.FFIN <= 20250531
-    AND B.FFIN >= 20250501
-    AND A.CEMPTI IN ('0030')
-    AND A.CESTADO = '01';
+@echo off
+REM Definir la ruta de OneDrive donde se guardará el CSV
+set ONEDRIVE_PATH="C:\Users\TuUsuario\OneDrive\Carpeta\"
+
+REM Definir el nombre del archivo CSV
+set FILENAME=consulta_resultado.csv
+
+REM Eliminar archivo anterior si existe
+if exist %ONEDRIVE_PATH%%FILENAME% (
+    del %ONEDRIVE_PATH%%FILENAME%
+)
+
+REM Crear un archivo SQL temporal con la consulta
+echo SET FEEDBACK OFF > temp_query.sql
+echo SET LINESIZE 200 >> temp_query.sql
+echo SET PAGESIZE 50000 >> temp_query.sql
+echo SET TRIMSPOOL ON >> temp_query.sql
+echo SPOOL resultado.csv >> temp_query.sql
+echo SELECT a.CEMPTI AS CODIGO, a.DNOMBRE AS EMPTRANSPINTER, a.DDIRECCION AS DIRECCION, a.CESTADO AS ESTADO, a.CRESAUTORI, a.FINICIO, a.FFIN, a.CPAIS AS PAIS, a.CTIPODOC AS TIPODOC, a.CNRODOC AS NRODOC, b.REPRESENTATE, b.FECINI_REP, b.FECFIN_REP >> temp_query.sql
+echo FROM EMPREDTI A, REP_LEGAL B >> temp_query.sql
+echo WHERE A.CEMPTI = B.COD_OPERADOR AND B.tip_operador = 'E' AND A.FFIN >= 20250501 AND A.FFIN <= 20250531 AND B.FFIN >= 20250501 AND A.CEMPTI IN ('0030') AND A.CESTADO = '01'; >> temp_query.sql
+echo SPOOL OFF >> temp_query.sql
+
+REM Ejecutar la consulta SQL y exportarla a un archivo CSV
+sqlplus64 -S usuario/password@host:puerto/servicio @temp_query.sql
+
+REM Mover el archivo a la carpeta OneDrive
+move resultado.csv %ONEDRIVE_PATH%%FILENAME%
+
+REM Eliminar el archivo SQL temporal
+del temp_query.sql
+
+REM Confirmación de finalización
+echo Proceso completado.
+pause
 
 
 Servidor: tutupaca.unjbg.edu.pe

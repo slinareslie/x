@@ -10,21 +10,27 @@ if exist %ONEDRIVE_PATH%%FILENAME% (
     del %ONEDRIVE_PATH%%FILENAME%
 )
 
-REM Crear un archivo SQL temporal con la consulta
+REM Crear archivo temporal SQL con la configuración y consulta
 echo SET FEEDBACK OFF > temp_query.sql
 echo SET LINESIZE 200 >> temp_query.sql
 echo SET PAGESIZE 50000 >> temp_query.sql
 echo SET TRIMSPOOL ON >> temp_query.sql
 echo SPOOL consulta_resultado.csv >> temp_query.sql
-echo SELECT a.CEMPTI AS CODIGO, a.DNOMBRE AS EMPTRANSPINTER, a.DDIRECCION AS DIRECCION, a.CESTADO AS ESTADO, a.CRESAUTORI, a.FINICIO, a.FFIN, a.CPAIS AS PAIS, a.CTIPODOC AS TIPODOC, a.CNRODOC AS NRODOC, b.REPRESENTATE, b.FECINI_REP, b.FECFIN_REP >> temp_query.sql
+
+REM Añadir la consulta SQL al archivo temporal
+echo SELECT a.CEMPTI AS CODIGO, a.DNOMBRE AS EMPTRANSPINTER, a.DDIRECCION AS DIRECCION, a.CESTADO AS ESTADO, a.CRESAUTORI, a.FINICIO, a.FFIN, a.CPAIS AS PAIS, a.CTIPODOC AS TIPODOC, a.CNRODOC AS NRODOC, b.CREPLEGAL AS REPRESENTATE, b.FINICIO AS FECHA_INICIO, b.FFIN AS FECHA_FIN >> temp_query.sql
 echo FROM EMPREDTI A, REP_LEGAL B >> temp_query.sql
-echo WHERE A.CEMPTI = B.COD_OPERADOR AND B.tip_operador = 'E' AND A.FFIN >= 20250501 AND A.FFIN <= 20250531 AND B.FFIN >= 20250501 AND A.CEMPTI IN ('0030') AND A.CESTADO = '01'; >> temp_query.sql
+echo WHERE A.CEMPTI = B.COD_OPERADOR AND B.tip_operador = 'E' AND TO_DATE(b.FFIN, 'YYYY/MM/DD') >> temp_query.sql
+echo ORDER BY A.CEMPTI; >> temp_query.sql
+
+REM Finalizar el archivo temporal SQL con la sentencia SPOOL OFF
 echo SPOOL OFF >> temp_query.sql
+echo EXIT; >> temp_query.sql
 
 REM Ejecutar la consulta SQL y exportarla a un archivo CSV
-sqlplus64 -S usuario/password@host:puerto/servicio @temp_query.sql
+sqlplus usuario/password@host:puerto/servicio @temp_query.sql
 
-REM Mover el archivo a la carpeta OneDrive
+REM Mover el archivo CSV generado a la carpeta OneDrive
 move consulta_resultado.csv %ONEDRIVE_PATH%%FILENAME%
 
 REM Eliminar el archivo SQL temporal

@@ -1,32 +1,149 @@
-# Obtener la fecha actual
-$currentDate = Get-Date
+# ====================== CONFIGURACIÓN ======================
 
-# Determinar la fecha base según si es lunes o no
+# Ruta del archivo procesado
+$outputExcel = "D:\Usuarios\prac-slinaresl\SUNAT\3G0140 Sección de Manifiestos - 0.SEGUIMIENTOS DE EXPEDIENTES DE RECTIFICACION\Semaforo procesado\" + [System.IO.Path]::GetFileNameWithoutExtension($inputXls) + "_proc.xls"
+
+# Ruta del archivo KPI (año actual se ajusta más abajo)
+$kpiFile = ""
+
+# Guardar los PIDs iniciales de procesos Excel
+$initialPids = Get-Process -Name "EXCEL" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id
+
+# ====================== INICIAR EXCEL ======================
+
+$excel = New-Object -ComObject Excel.Application
+if (-not $excel) {
+    Write-Error "No se pudo iniciar Excel."
+    exit
+}
+$excel.Visible = $false
+$excel.DisplayAlerts = $false
+Start-Sleep -Seconds 1
+
+# ====================== LEER RESULTADOS ======================
+
+$workbookResults = $excel.Workbooks.Open($outputExcel)
+$worksheetResults = $workbookResults.Sheets.Item(1)
+
+$kpiValue = $worksheetResults.Cells.Item(7, 2).Value2
+$horasValue = $worksheetResults.Cells.Item(8, 2).Value2
+
+$workbookResults.Close($false)
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheetResults) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbookResults) | Out-Null
+
+# ====================== CALCULAR FECHA ======================
+
+$currentDate = Get-Date
 if ($currentDate.DayOfWeek -eq 'Monday') {
     $adjustedDate = $currentDate.AddDays(-3)
-}
-else {
+} else {
     $adjustedDate = $currentDate.AddDays(-1)
 }
 
-# Extraer componentes de la fecha ajustada
 $year = $adjustedDate.Year
 $month = $adjustedDate.Month
 $day = $adjustedDate.Day
 
-# Verificar si el día está en el rango 1-3 y ajustar al mes anterior si es necesario
 if ($day -le 3) {
     if ($month -eq 1) {
         $month = 12
         $year -= 1
-    }
-    else {
+    } else {
         $month -= 1
     }
-
-    $lastDayOfPreviousMonth = [datetime]::DaysInMonth($year, $month)
-    $day = $lastDayOfPreviousMonth - (3 - $day)
+    $lastDay = [datetime]::DaysInMonth($year, $month)
+    $day = $lastDay - (3 - $day)
 }
 
-# Mostrar resultado (opcional)
-"Fecha ajustada: $year-$month-$day"
+$kpiFile = "D:\Usuarios\prac-slinaresl\SUNAT\3G0140 Sección de Manifiestos - 0.SEGUIMIENTOS DE EXPEDIENTES DE RECTIFICACION\KPI_$year.xls"
+
+# ====================== VERIFICAR ARCHIVO BLOQUEADO ======================
+
+function Test-FileLock {
+    param ([string]$FilePath)
+    try {
+        $fs = [System.IO.File]::Open($FilePath, 'Open', 'ReadWrite', 'None')
+        $fs.Close()
+        return $false
+    } catch {
+        return $true
+    }
+}
+
+while (Test-FileLock -FilePath $kpiFile) {
+    Write-Host "El archivo KPI_$year.xls está abierto. Ciérralo para continuar..."
+    Start-Sleep -Seconds 5
+}
+
+# ====================== ACTUALIZAR KPI ======================
+
+$workbookKPI = $excel.Workbooks.Open($kpiFile)
+$worksheetKPI = $workbookKPI.Sheets.Item(1)
+
+$monthFound = $false
+$row = 2
+while ($row -le $worksheetKPI.UsedRange.Rows.Count) {
+    $cell = $worksheetKPI.Cells.Item($row, 1).Value2
+    if ($cell -like "*$($currentDate.ToString("MMMM yyyy"))*") {
+        $monthFound = $true
+        break
+    }
+    $row++
+}
+
+if (-not $monthFound) {
+    Write-Host "No se encontró el mes en la plantilla."
+    $workbookKPI.Close($false)
+    $excel.Quit()
+    exit
+}
+
+$targetRow = $row + 1
+while ($targetRow -le $worksheetKPI.UsedRange.Rows.Count) {
+    $currentDay = $worksheetKPI.Cells.Item($targetRow, 2).Value2
+    if ($currentDay -eq $day) {
+        $kpiFormatted = [double]::Parse($kpiValue).ToString("F2")
+        $horasFormatted = [double]::Parse($horasValue).ToString("F2")
+
+        $worksheetKPI.Cells.Item($targetRow, 3).Value2 = $kpiFormatted
+        $worksheetKPI.Cells.Item($targetRow, 3).NumberFormat = "0.00"
+
+        $worksheetKPI.Cells.Item($targetRow, 4).Value2 = $horasFormatted
+        $worksheetKPI.Cells.Item($targetRow, 4).NumberFormat = "0.00"
+
+        $kpiCell = $worksheetKPI.Cells.Item($targetRow, 3)
+
+        if ($kpiValue -gt 80) {
+            $kpiCell.Interior.Color = 0x93C47D
+        } elseif ($kpiValue -eq 80) {
+            $kpiCell.Interior.Color = 0x6FA8DC
+        } else {
+            $kpiCell.Interior.Color = 0x674EA7
+        }
+
+        Write-Host "KPI colocado en C$targetRow para el día $day/$month."
+        break
+    }
+    $targetRow++
+}
+
+$workbookKPI.Save()
+$workbookKPI.Close($false)
+
+# ====================== LIBERAR OBJETOS Y PROCESOS ======================
+
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheetKPI) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbookKPI) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
+
+[System.GC]::Collect()
+[System.GC]::WaitForPendingFinalizers()
+
+$finalPids = Get-Process -Name "EXCEL" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id
+$createdPids = $finalPids | Where-Object { $initialPids -notcontains $_ }
+if ($createdPids) {
+    Stop-Process -Id $createdPids -Force -ErrorAction SilentlyContinue
+}
+
+Write-Host "Actualización completada correctamente para el $day/$month."

@@ -76,24 +76,66 @@ SPOOL OFF
 EXIT
 
 
-@echo off
-setlocal enabledelayedexpansion
 
-:: Configura la ruta de destino
-set DESTINO=C:\Reportes\SIGAD
 
-:: Crear carpeta si no existe
-if not exist "!DESTINO!" mkdir "!DESTINO!"
+# Ruta del archivo Excel
+$excelPath = "C:\Ruta\al\archivo\TIEMPO_ATENCION_EXP_RECTIF-09-04-2025-SIGAD.xls"
 
-:: Obtener la fecha actual en formato dd-mm-yyyy
-for /f "tokens=2 delims==" %%I in ('"wmic os get localdatetime /value"') do set datetime=%%I
-set fecha=!datetime:~6,2!-!datetime:~4,2!-!datetime:~0,4!
+# Crear instancia de Excel
+$excel = New-Object -ComObject Excel.Application
+$excel.Visible = $false
+$excel.DisplayAlerts = $false
 
-:: Ejecutar SQLPlus con variable de fecha
-sqlplus usuario/password@TNS_ALIAS @exportar_tiempos.sql fecha="!fecha!"
+# Abrir el archivo
+$workbook = $excel.Workbooks.Open($excelPath)
 
-:: Nombre del archivo generado
-set archivo=TIEMPO_ATENCION_EXP_RECTIF-!fecha!-SIGAD.xls
+# Asignar las hojas
+$worksheet1 = $workbook.Sheets.Item("Estadisticas")
+$worksheet2 = $workbook.Sheets.Item("Datos")
 
-:: Mover el archivo al destino
-move "!archivo!" "!DESTINO!\!archivo!"
+# Crear una nueva hoja temporal
+$tempSheet = $workbook.Sheets.Add()
+$tempSheet.Name = "Temporal"
+
+# Copiar contenido de la hoja 'Estadisticas'
+$worksheet1.UsedRange.Copy()
+$tempSheet.Range("A1").PasteSpecial(-4163)  # -4163 = xlPasteValues
+
+# Determinar fila inicial para las columnas de 'Datos'
+$rowStart = $worksheet1.UsedRange.Rows.Count + 2
+
+# Copiar columnas específicas de la hoja 'Datos'
+$worksheet2.Range("F:F").Copy()
+$tempSheet.Range("A$rowStart").PasteSpecial(-4163)
+
+$worksheet2.Range("H:H").Copy()
+$tempSheet.Range("B$rowStart").PasteSpecial(-4163)
+
+$worksheet2.Range("I:I").Copy()
+$tempSheet.Range("C$rowStart").PasteSpecial(-4163)
+
+$worksheet2.Range("J:J").Copy()
+$tempSheet.Range("D$rowStart").PasteSpecial(-4163)
+
+$worksheet2.Range("M:M").Copy()
+$tempSheet.Range("E$rowStart").PasteSpecial(-4163)
+
+# Activar hoja temporal (opcional)
+$tempSheet.Activate()
+
+# Guardar y cerrar
+$workbook.Save()
+$workbook.Close($true)
+$excel.Quit()
+
+# Liberar objetos COM
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($tempSheet) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet1) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet2) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
+[GC]::Collect()
+[GC]::WaitForPendingFinalizers()
+
+Write-Host "Proceso completado con éxito."
+ 

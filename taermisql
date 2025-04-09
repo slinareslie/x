@@ -74,3 +74,26 @@ ORDER BY SUBSTR (TO_CHAR (FD_INREC), 4, 3);
 
 SPOOL OFF
 EXIT
+
+
+@echo off
+setlocal enabledelayedexpansion
+
+:: Configura la ruta de destino
+set DESTINO=C:\Reportes\SIGAD
+
+:: Crear carpeta si no existe
+if not exist "!DESTINO!" mkdir "!DESTINO!"
+
+:: Obtener la fecha actual en formato dd-mm-yyyy
+for /f "tokens=2 delims==" %%I in ('"wmic os get localdatetime /value"') do set datetime=%%I
+set fecha=!datetime:~6,2!-!datetime:~4,2!-!datetime:~0,4!
+
+:: Ejecutar SQLPlus con variable de fecha
+sqlplus usuario/password@TNS_ALIAS @exportar_tiempos.sql fecha="!fecha!"
+
+:: Nombre del archivo generado
+set archivo=TIEMPO_ATENCION_EXP_RECTIF-!fecha!-SIGAD.xls
+
+:: Mover el archivo al destino
+move "!archivo!" "!DESTINO!\!archivo!"

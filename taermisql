@@ -78,28 +78,9 @@ EXIT
 
 
 
-# Ruta del archivo Excel
-$excelPath = "C:\Ruta\al\archivo\TIEMPO_ATENCION_EXP_RECTIF-09-04-2025-SIGAD.xls"
-
-# Crear instancia de Excel
-$excel = New-Object -ComObject Excel.Application
-$excel.Visible = $false
-$excel.DisplayAlerts = $false
-
-# Abrir el archivo
-$workbook = $excel.Workbooks.Open($excelPath)
-
-# Asignar hojas
-$worksheet1 = $workbook.Sheets.Item("Estadisticas")
-$worksheet2 = $workbook.Sheets.Item("Datos")
-
-# Crear hoja temporal
-$tempSheet = $workbook.Sheets.Add()
-$tempSheet.Name = "Temporal"
-
 # Copiar hoja Estadisticas
 $worksheet1.UsedRange.Copy()
-$tempSheet.Range("A1").PasteSpecial(-4163)  # xlPasteValues
+$tempSheet.Range("A1").PasteSpecial(-4142)  # xlPasteAllUsingSourceTheme (incluye formato y valores)
 
 # Fila inicial para segunda sección
 $rowStart = $worksheet1.UsedRange.Rows.Count + 2
@@ -109,37 +90,16 @@ $lastRow = $worksheet2.UsedRange.Rows.Count
 
 # Copiar columnas específicas (solo rango usado, no columna entera)
 $worksheet2.Range("F2:F$lastRow").Copy()
-$tempSheet.Range("A$rowStart").PasteSpecial(-4163)
+$tempSheet.Range("A$rowStart").PasteSpecial(-4142)  # Pegar con formato
 
 $worksheet2.Range("H2:H$lastRow").Copy()
-$tempSheet.Range("B$rowStart").PasteSpecial(-4163)
+$tempSheet.Range("B$rowStart").PasteSpecial(-4142)  # Pegar con formato (incluye fechas)
 
 $worksheet2.Range("I2:I$lastRow").Copy()
-$tempSheet.Range("C$rowStart").PasteSpecial(-4163)
+$tempSheet.Range("C$rowStart").PasteSpecial(-4142)  # Pegar con formato (incluye fechas)
 
 $worksheet2.Range("J2:J$lastRow").Copy()
-$tempSheet.Range("D$rowStart").PasteSpecial(-4163)
+$tempSheet.Range("D$rowStart").PasteSpecial(-4142)  # Pegar con formato
 
 $worksheet2.Range("M2:M$lastRow").Copy()
-$tempSheet.Range("E$rowStart").PasteSpecial(-4163)
-
-# Activar hoja final (opcional)
-$tempSheet.Activate()
-
-# Guardar y cerrar
-$workbook.Save()
-$workbook.Close($true)
-$excel.Quit()
-
-# Liberar memoria
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($tempSheet) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet1) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet2) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
-[GC]::Collect()
-[GC]::WaitForPendingFinalizers()
-
-Write-Host "Proceso completado con éxito."
- 
- 
+$tempSheet.Range("E$rowStart").PasteSpecial(-4142)  # Pegar con formato

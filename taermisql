@@ -89,38 +89,41 @@ $excel.DisplayAlerts = $false
 # Abrir el archivo
 $workbook = $excel.Workbooks.Open($excelPath)
 
-# Asignar las hojas
+# Asignar hojas
 $worksheet1 = $workbook.Sheets.Item("Estadisticas")
 $worksheet2 = $workbook.Sheets.Item("Datos")
 
-# Crear una nueva hoja temporal
+# Crear hoja temporal
 $tempSheet = $workbook.Sheets.Add()
 $tempSheet.Name = "Temporal"
 
-# Copiar contenido de la hoja 'Estadisticas'
+# Copiar hoja Estadisticas
 $worksheet1.UsedRange.Copy()
-$tempSheet.Range("A1").PasteSpecial(-4163)  # -4163 = xlPasteValues
+$tempSheet.Range("A1").PasteSpecial(-4163)  # xlPasteValues
 
-# Determinar fila inicial para las columnas de 'Datos'
+# Fila inicial para segunda sección
 $rowStart = $worksheet1.UsedRange.Rows.Count + 2
 
-# Copiar columnas específicas de la hoja 'Datos'
-$worksheet2.Range("F:F").Copy()
+# Obtener última fila usada en hoja 'Datos'
+$lastRow = $worksheet2.UsedRange.Rows.Count
+
+# Copiar columnas específicas (solo rango usado, no columna entera)
+$worksheet2.Range("F2:F$lastRow").Copy()
 $tempSheet.Range("A$rowStart").PasteSpecial(-4163)
 
-$worksheet2.Range("H:H").Copy()
+$worksheet2.Range("H2:H$lastRow").Copy()
 $tempSheet.Range("B$rowStart").PasteSpecial(-4163)
 
-$worksheet2.Range("I:I").Copy()
+$worksheet2.Range("I2:I$lastRow").Copy()
 $tempSheet.Range("C$rowStart").PasteSpecial(-4163)
 
-$worksheet2.Range("J:J").Copy()
+$worksheet2.Range("J2:J$lastRow").Copy()
 $tempSheet.Range("D$rowStart").PasteSpecial(-4163)
 
-$worksheet2.Range("M:M").Copy()
+$worksheet2.Range("M2:M$lastRow").Copy()
 $tempSheet.Range("E$rowStart").PasteSpecial(-4163)
 
-# Activar hoja temporal (opcional)
+# Activar hoja final (opcional)
 $tempSheet.Activate()
 
 # Guardar y cerrar
@@ -128,7 +131,7 @@ $workbook.Save()
 $workbook.Close($true)
 $excel.Quit()
 
-# Liberar objetos COM
+# Liberar memoria
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($tempSheet) | Out-Null
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet1) | Out-Null
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet2) | Out-Null
@@ -138,4 +141,5 @@ $excel.Quit()
 [GC]::WaitForPendingFinalizers()
 
 Write-Host "Proceso completado con éxito."
+ 
  

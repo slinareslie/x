@@ -1,0 +1,4 @@
+$headers = New-Object System.Collections.Generic.List[string]
+for ($col = 1; $col -le $sourceSheet.UsedRange.Columns.Count; $col++) {
+    $headers.Add($sourceSheet.Cells.Item(1, $col).Value2)
+}

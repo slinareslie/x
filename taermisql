@@ -1,7 +1,7 @@
 $csvPath = "D:\Ordenar Scripts\Scripts probar\Transportista Descargar\consulta_resultado.csv"
 $excelPath = "D:\Ordenar Scripts\Scripts probar\Transportista Descargar\consulta_resultado.xlsx"
 
-# Leer CSV como texto plano (sin interpretación automática de tipos)
+# Leer CSV usando el delimitador ";"
 $lines = Get-Content -Path $csvPath
 if ($lines.Count -eq 0) {
     Write-Host "El archivo CSV está vacío."
@@ -9,7 +9,7 @@ if ($lines.Count -eq 0) {
 }
 
 # Separar encabezados y datos
-$headers = $lines[0].Split(',')
+$headers = $lines[0].Split(';')
 $dataLines = $lines[1..($lines.Count - 1)]
 
 # Iniciar Excel
@@ -28,12 +28,12 @@ for ($i = 0; $i -lt $headers.Count; $i++) {
 
 # Escribir datos como texto
 for ($row = 0; $row -lt $dataLines.Count; $row++) {
-    $cols = $dataLines[$row].Split(',')
+    $cols = $dataLines[$row].Split(';')
     for ($col = 0; $col -lt $cols.Count; $col++) {
         $cell = $worksheet.Cells.Item($row + 2, $col + 1)
         $value = $cols[$col]
 
-        # Si es columna F, G, L o M, intentar convertir fecha
+        # Si es columna F (6), G (7), L (12) o M (13), intentar convertir fecha
         if (($col + 1) -in @(6, 7, 12, 13) -and $value -match '^\d{8}$') {
             $dateStr = $value.Substring(0,4) + "-" + $value.Substring(4,2) + "-" + $value.Substring(6,2)
             try {

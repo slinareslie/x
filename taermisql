@@ -1,105 +1,39 @@
-SET PAGESIZE 50000
-SET LINESIZE 1000
-SET FEEDBACK OFF
-SET TRIMSPOOL ON
-SET TERMOUT OFF
-SET ECHO OFF
-SET COLSEP ';'
-SPOOL TIEMPO_ATENCION_EXP_RECTIF-&&FECHA-SIGAD.xls
+$fecha = Get-Date -Format "dd-MM-yyyy"
+$csvPath = "D:\Ordenar Scripts\Scripts probar\Transportista Descargar\consulta_resultado.csv"
+$excelPath = "D:\Ordenar Scripts\Scripts probar\Transportista Descargar\consulta_resultado.xlsx"
 
--- Consulta aquí (tu versión original ya está bien, solo recorta si quieres)
-SELECT ... -- tu consulta aquí
+# Iniciar Excel
+$excelApp = New-Object -ComObject Excel.Application
+$excelApp.Visible = $false
+$excelApp.DisplayAlerts = $false
 
-SPOOL OFF
-EXIT
+# Abrir archivo CSV como libro
+$workbook = $excelApp.Workbooks.Open($csvPath)
+$worksheet = $workbook.Sheets.Item(1)
 
+# Detectar el rango usado
+$usedRange = $worksheet.UsedRange
+$rowCount = $usedRange.Rows.Count
+$colCount = $usedRange.Columns.Count
 
+# Definir el rango de la tabla (asumiendo encabezados en la primera fila)
+$startCell = $worksheet.Cells.Item(1,1).Address()
+$endCell = $worksheet.Cells.Item($rowCount, $colCount).Address()
+$tableRange = "$startCell:$endCell"
 
+# Insertar tabla
+$excelListObject = $worksheet.ListObjects.Add(1, $worksheet.Range($tableRange), $null, 1)
+$excelListObject.Name = "TablaSigad"
 
-@echo off
-setlocal enabledelayedexpansion
+# Guardar como archivo Excel (.xlsx)
+$workbook.SaveAs($excelPath, [Microsoft.Office.Interop.Excel.XlFileFormat]::xlOpenXMLWorkbook)
+$workbook.Close($false)
+$excelApp.Quit()
 
-:: Obtener la fecha actual en formato dd-mm-yyyy
-for /f "tokens=2 delims==" %%I in ('"wmic os get localdatetime /value"') do set datetime=%%I
-set fecha=!datetime:~6,2!-!datetime:~4,2!-!datetime:~0,4!
-
-:: Pasar la fecha como variable al script SQL
-sqlplus usuario/password@TNS_ALIAS @exportar_tiempos.sql fecha="!fecha!"
-
-:: Renombrar el archivo de salida
-ren "TIEMPO_ATENCION_EXP_RECTIF-!fecha!-SIGAD.xls" "TIEMPO_ATENCION_EXP_RECTIF-!fecha!-SIGAD.xls"
-
-
-
-
-SET PAGESIZE 50000
-SET LINESIZE 1000
-SET FEEDBACK OFF
-SET TRIMSPOOL ON
-SET TERMOUT OFF
-SET ECHO OFF
-SET COLSEP ';'  -- o usa TAB si prefieres
-SPOOL resultado.xls
-
--- Aquí pega tu consulta completa:
-SELECT   ANOEXPEDI AÑO, CODI_ADUA ADUANA, OFIC_REC, AREAEJEC,
-         SUBSTR (TO_CHAR (FD_INREC), 4, 3) MES, NROEXPEDI EXP, PROCEDIM,
-         FD_INREC AS FECHA_EXPEDIENTE, FD_TEREC AS FECHA_CONCLUSION,
-         USER_DIGIC,
-            TO_CHAR (TRUNC ((FD_TEREC - FD_INREC)), '000') || ' - '
-         || TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * 24, 24)), '00') || ':'
-         || TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * (60 * 24), 60)), '00') || ':'
-         || TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * (60 * 60 * 24), 60)), '00') AS "DD  -  HH:MI:SS",
-           ((TO_CHAR (TRUNC ((FD_TEREC - FD_INREC)), '000')) * 24)
-         + (TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * 24, 24)), '00'))
-         + ((TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * (60 * 24), 60)), '00')) / 60) AS TOTALENHORAS,
-           TO_CHAR (TRUNC ((FD_TEREC - FD_INREC)), '000')
-         + (TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * 24, 24)), '00')) / 24
-         + ((TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * (60 * 24), 60)), '00')) / 60) / 24
-         + ((TO_CHAR (TRUNC (MOD ((FD_TEREC - FD_INREC) * (60 * 60 * 24), 60)), '00')) / 60) / 60 / 24 TOTALENDIAS
-FROM     (
-    SELECT A.ANOEXPEDI, A.OFIC_REC, A.CODI_ADUA, A.AREAEJEC,
-           A.NROEXPEDI, A.PROCEDIM, A.ASUNTO, A.FECEXP, A.TIMEEXP,
-           A.FECH_CONC, A.TIM_DIGIC, USER_DIGIC,
-           TO_DATE (SUBSTR (TO_CHAR (A.FECEXP), 1, 4) || '/' || SUBSTR (TO_CHAR (A.FECEXP), 5, 2) || '/' || SUBSTR (TO_CHAR (A.FECEXP), 7, 2) || ' ' || A.TIMEEXP, 'YYYY/MM/DD HH24:MI:SS') AS FD_INREC,
-           TO_DATE (SUBSTR (TO_CHAR (A.FECH_CONC), 1, 4) || '/' || SUBSTR (TO_CHAR (A.FECH_CONC), 5, 2) || '/' || SUBSTR (TO_CHAR (A.FECH_CONC), 7, 2) || ' ' || A.TIM_DIGIC, 'YYYY/MM/DD HH24:MI:SS') AS FD_TEREC
-      FROM EXPEDI A
-     WHERE A.ANOEXPEDI IN ('2024', '2025')
-       AND A.PROCEDIM IN ('2301', '3068')
-       AND A.CODI_ADUA = '172'
-       AND A.FECH_CONC > 0
-)
-WHERE FD_INREC >= (SYSDATE - 90)
-ORDER BY SUBSTR (TO_CHAR (FD_INREC), 4, 3);
-
-SPOOL OFF
-EXIT
-
-
-
-
-# Copiar hoja Estadisticas
-$worksheet1.UsedRange.Copy()
-$tempSheet.Range("A1").PasteSpecial(-4142)  # xlPasteAllUsingSourceTheme (incluye formato y valores)
-
-# Fila inicial para segunda sección
-$rowStart = $worksheet1.UsedRange.Rows.Count + 2
-
-# Obtener última fila usada en hoja 'Datos'
-$lastRow = $worksheet2.UsedRange.Rows.Count
-
-# Copiar columnas específicas (solo rango usado, no columna entera)
-$worksheet2.Range("F2:F$lastRow").Copy()
-$tempSheet.Range("A$rowStart").PasteSpecial(-4142)  # Pegar con formato
-
-$worksheet2.Range("H2:H$lastRow").Copy()
-$tempSheet.Range("B$rowStart").PasteSpecial(-4142)  # Pegar con formato (incluye fechas)
-
-$worksheet2.Range("I2:I$lastRow").Copy()
-$tempSheet.Range("C$rowStart").PasteSpecial(-4142)  # Pegar con formato (incluye fechas)
-
-$worksheet2.Range("J2:J$lastRow").Copy()
-$tempSheet.Range("D$rowStart").PasteSpecial(-4142)  # Pegar con formato
-
-$worksheet2.Range("M2:M$lastRow").Copy()
-$tempSheet.Range("E$rowStart").PasteSpecial(-4142)  # Pegar con formato
+# Liberar recursos
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excelListObject) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excelApp) | Out-Null
+[GC]::Collect()
+[GC]::WaitForPendingFinalizers()

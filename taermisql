@@ -23,17 +23,17 @@ $worksheet = $workbook.Sheets.Item(1)
 
 # Escribir encabezados
 for ($i = 0; $i -lt $headers.Count; $i++) {
-    $worksheet.Cells.Item(1, $i + 1).Value2 = $headers[$i]
+    $worksheet.Cells.Item(1, $i + 1).Value2 = $headers[$i].Trim()
 }
 
-# Escribir datos como texto
+# Escribir datos como texto, limpiando espacios y convirtiendo fechas
 for ($row = 0; $row -lt $dataLines.Count; $row++) {
     $cols = $dataLines[$row].Split(';')
     for ($col = 0; $col -lt $cols.Count; $col++) {
         $cell = $worksheet.Cells.Item($row + 2, $col + 1)
-        $value = $cols[$col]
+        $value = $cols[$col].Trim()  # Eliminar espacios innecesarios
 
-        # Si es columna F (6), G (7), L (12) o M (13), intentar convertir fecha
+        # Si es columna F (6), G (7), L (12) o M (13), convertir fecha
         if (($col + 1) -in @(6, 7, 12, 13) -and $value -match '^\d{8}$') {
             $dateStr = $value.Substring(0,4) + "-" + $value.Substring(4,2) + "-" + $value.Substring(6,2)
             try {
@@ -41,11 +41,11 @@ for ($row = 0; $row -lt $dataLines.Count; $row++) {
                 $cell.Value2 = $date
                 $cell.NumberFormat = "dd/mm/yyyy"
             } catch {
-                $cell.Value2 = $value  # Si falla, lo deja como texto
                 $cell.NumberFormat = "@"
+                $cell.Value2 = $value
             }
         } else {
-            # Forzar a texto
+            # Forzar a texto y asignar valor limpio
             $cell.NumberFormat = "@"
             $cell.Value2 = $value
         }
@@ -64,7 +64,7 @@ $workbook.SaveAs($excelPath, [Microsoft.Office.Interop.Excel.XlFileFormat]::xlOp
 $workbook.Close($false)
 $excelApp.Quit()
 
-# Limpiar
+# Limpiar objetos COM
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($table) | Out-Null
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet) | Out-Null
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null

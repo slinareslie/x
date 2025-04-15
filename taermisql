@@ -1,18 +1,26 @@
-# Dentro del for que recorre celdas:
-$value = $cols[$col].Trim()  # Limpia espacios
+$value = $cols[$col].Trim()  # Limpiar espacios
 
-# Validar si es una fecha yyyymmdd luego de limpiar
-if (($col + 1) -in @(6, 7, 12, 13) -and $value -match '^\d{8}$') {
-    $dateStr = $value.Substring(0,4) + "-" + $value.Substring(4,2) + "-" + $value.Substring(6,2)
-    try {
-        $date = [datetime]::ParseExact($dateStr, "yyyy-MM-dd", $null)
-        $cell.Value2 = $date
-        $cell.NumberFormat = "dd/mm/yyyy"
-    } catch {
+# Si es columna F, G, L o M (índices 6, 7, 12, 13)
+if (($col + 1) -in @(6, 7, 12, 13)) {
+    # Intentar convertir valor si tiene 8 dígitos
+    if ($value -match '^\d{8}$') {
+        try {
+            $year = [int]$value.Substring(0,4)
+            $month = [int]$value.Substring(4,2)
+            $day = [int]$value.Substring(6,2)
+            $date = Get-Date -Year $year -Month $month -Day $day
+            $cell.Value2 = $date
+            $cell.NumberFormat = "dd/mm/yyyy"
+        } catch {
+            $cell.NumberFormat = "@"
+            $cell.Value2 = $value
+        }
+    } else {
         $cell.NumberFormat = "@"
         $cell.Value2 = $value
     }
 } else {
+    # Forzar a texto
     $cell.NumberFormat = "@"
     $cell.Value2 = $value
 }

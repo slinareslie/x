@@ -1,9 +1,12 @@
 Sort(
-    AddColumns(
-        Distinct([@'DirectorioTransportistaSIGAD']; PA);
-        "Paises";
-        If(Len(Result) = 2; Result; "Otros")
+    Distinct(
+        AddColumns(
+            [@'DirectorioTransportistaSIGAD'];
+            "Paises";
+            If(Len(PA) = 2; PA; "Otros")
+        );
+        Paises
     );
-    "Paises";
+    Result;
     Ascending
 )

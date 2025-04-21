@@ -1,32 +1,16 @@
-GroupBy(
-    Filter(
-        [@'DirectorioTransportistaSIGAD'],
-        Dropdown1_1.Selected.Value = "Nombre" &&
-        (
-            StartsWith(EMPTRANSPINTER, TextSearchBox1_2.Text) ||
-            EndsWith(EMPTRANSPINTER, TextSearchBox1_2.Text)
-        )
-    ),
-    CODIGO, // Agrupar por el campo único que diferencia a las empresas, usa el campo correcto de tu origen
-    "GroupTransportistas"
-)
-
-
-
-
-
+YourGallery.Items = 
 AddColumns(
-    GroupBy(
-        Filter(
-            [@'DirectorioTransportistaSIGAD'],
-            Dropdown1_1.Selected.Value = "Nombre" &&
-            (
-                StartsWith(EMPTRANSPINTER, TextSearchBox1_2.Text) ||
-                EndsWith(EMPTRANSPINTER, TextSearchBox1_2.Text)
-            )
-        ),
-        CODIGO,
-        "GroupTransportistas"
-    ),
-    "FirstEmpresa", First(GroupTransportistas)
+    GroupBy(
+        Filter(
+            [@'DirectorioTransportistaSIGAD'],
+            Dropdown1_1.Selected.Value = "Nombre" &&
+            (
+                StartsWith(EMPTRANSPINTER, TextSearchBox1_2.Text) ||
+                EndsWith(EMPTRANSPINTER, TextSearchBox1_2.Text)
+            )
+        ),
+        "CODIGO",
+        "GroupTransportistas"
+    ),
+    "FirstEmpresa", First(GroupTransportistas)
 )

@@ -1,16 +1,24 @@
-YourGallery.Items = 
-AddColumns(
-    GroupBy(
-        Filter(
-            [@'DirectorioTransportistaSIGAD'],
-            Dropdown1_1.Selected.Value = "Nombre" &&
-            (
-                StartsWith(EMPTRANSPINTER, TextSearchBox1_2.Text) ||
-                EndsWith(EMPTRANSPINTER, TextSearchBox1_2.Text)
-            )
+SortByColumns(
+    AddColumns(
+        GroupBy(
+            Filter(
+                [@'DirectorioTransportistaSIGAD'],
+                Dropdown1_1.Selected.Value = "Nombre" &&
+                (
+                    StartsWith(EMPTRANSPINTER, TextSearchBox1_2.Text) ||
+                    EndsWith(EMPTRANSPINTER, TextSearchBox1_2.Text)
+                )
+            ),
+            "CODIGO",               // Campo de agrupación
+            "GroupTransportistas"   // Nombre del grupo
         ),
-        "CODIGO",
-        "GroupTransportistas"
+        "FirstEmpresa", First(GroupTransportistas),
+        "NombreEmpresa", First(GroupTransportistas).EMPTRANSPINTER  // Campo plano para ordenamiento
     ),
-    "FirstEmpresa", First(GroupTransportistas)
+    "NombreEmpresa",  // Ahora se puede ordenar por este campo
+    If(
+        SortDescending1_1,
+        SortOrder.Descending,
+        SortOrder.Ascending
+    )
 )

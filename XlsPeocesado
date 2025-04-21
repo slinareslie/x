@@ -1,4 +1,4 @@
-SortByColumns(
+Sort(
     AddColumns(
         Distinct([@'DirectorioTransportistaSIGAD']; PA);
         "Paises";

@@ -1,24 +1,9 @@
 SortByColumns(
-    AddColumns(
-        GroupBy(
-            Filter(
-                [@'DirectorioTransportistaSIGAD'],
-                Dropdown1_1.Selected.Value = "Nombre" &&
-                (
-                    StartsWith(EMPTRANSPINTER, TextSearchBox1_2.Text) ||
-                    EndsWith(EMPTRANSPINTER, TextSearchBox1_2.Text)
-                )
-            ),
-            "CODIGO",               // Campo de agrupación
-            "GroupTransportistas"   // Nombre del grupo
-        ),
-        "FirstEmpresa", First(GroupTransportistas),
-        "NombreEmpresa", First(GroupTransportistas).EMPTRANSPINTER  // Campo plano para ordenamiento
-    ),
-    "NombreEmpresa",  // Ahora se puede ordenar por este campo
-    If(
-        SortDescending1_1,
-        SortOrder.Descending,
-        SortOrder.Ascending
-    )
+    AddColumns(
+        Distinct([@'DirectorioTransportistaSIGAD'], PA),
+        "Paises",
+        If(Len(Result) = 2, Result, "Otros")
+    ),
+    "Paises",
+    Ascending
 )

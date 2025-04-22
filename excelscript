@@ -1,41 +1,15 @@
-@echo off
-REM Definir la ruta de OneDrive donde se guardará el CSV
-set ONEDRIVE_PATH="C:\Users\TuUsuario\OneDrive\Carpeta\"
-
-REM Definir el nombre del archivo CSV
-set FILENAME=consulta_resultado.csv
-
-REM Eliminar archivo anterior si existe
-if exist %ONEDRIVE_PATH%%FILENAME% (
-    del %ONEDRIVE_PATH%%FILENAME%
+# Ordenar los datos por la columna L (12) de forma descendente
+$startRow = 4
+$endRow = $data.Length + 3
+$sortRange = $worksheet.Range("A$startRow", $worksheet.Cells.Item($endRow, $headers.Length))
+$worksheet.Sort.SortFields.Clear()
+$worksheet.Sort.SortFields.Add(
+    $Key: $worksheet.Range("L$startRow", "L$endRow"),
+    $SortOn: 0, # xlSortOnValues
+    $Order: 2,  # xlDescending
+    $DataOption: 0
 )
 
-REM Crear archivo temporal SQL con la configuración y consulta
-echo SET FEEDBACK OFF > temp_query.sql
-echo SET LINESIZE 200 >> temp_query.sql
-echo SET PAGESIZE 50000 >> temp_query.sql
-echo SET TRIMSPOOL ON >> temp_query.sql
-echo SPOOL consulta_resultado.csv >> temp_query.sql
-
-REM Añadir la consulta SQL al archivo temporal
-echo SELECT a.CEMPTI AS CODIGO, a.DNOMBRE AS EMPTRANSPINTER, a.DDIRECCION AS DIRECCION, a.CESTADO AS ESTADO, a.CRESAUTORI, a.FINICIO, a.FFIN, a.CPAIS AS PAIS, a.CTIPODOC AS TIPODOC, a.CNRODOC AS NRODOC, b.CREPLEGAL AS REPRESENTATE, b.FINICIO AS FECHA_INICIO, b.FFIN AS FECHA_FIN >> temp_query.sql
-echo FROM EMPREDTI A, REP_LEGAL B >> temp_query.sql
-echo WHERE A.CEMPTI = B.COD_OPERADOR AND B.tip_operador = 'E' AND TO_DATE(b.FFIN, 'YYYY/MM/DD') >> temp_query.sql
-echo ORDER BY A.CEMPTI; >> temp_query.sql
-
-REM Finalizar el archivo temporal SQL con la sentencia SPOOL OFF
-echo SPOOL OFF >> temp_query.sql
-echo EXIT; >> temp_query.sql
-
-REM Ejecutar la consulta SQL y exportarla a un archivo CSV
-sqlplus usuario/password@host:puerto/servicio @temp_query.sql
-
-REM Mover el archivo CSV generado a la carpeta OneDrive
-move consulta_resultado.csv %ONEDRIVE_PATH%%FILENAME%
-
-REM Eliminar el archivo SQL temporal
-del temp_query.sql
-
-REM Confirmación de finalización
-echo Proceso completado.
-pause
+$worksheet.Sort.SetRange($sortRange)
+$worksheet.Sort.Header = 1  # xlYes (tiene encabezado)
+$worksheet.Sort.Apply()

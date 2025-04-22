@@ -1,33 +1,15 @@
-SortByColumns(
-    AddColumns(
-        GroupBy(
-            Filter(
-                [@'Directorio Final Local'];
-                (Dropdown1.Selected.Value = "Código" && StartsWith(Codigo; TextSearchBox1_1.Text)) ||
-                (Dropdown1.Selected.Value = "RUC" && StartsWith('RUC/RUT/CUIT de la Emp. Transporte'; TextSearchBox1_1.Text)) ||
-                (Dropdown1.Selected.Value = "Nacionalidad" && StartsWith(Nacionalidad; TextSearchBox1_1.Text)) ||
-                (Dropdown1.Selected.Value = "Nombre" && 
-                    (StartsWith(Title; TextSearchBox1_1.Text) || EndsWith(Title; TextSearchBox1_1.Text))
-                ) ||
-                (Dropdown1.Selected.Value = "Expediente" && 
-                    (StartsWith(Expediente; TextSearchBox1_1.Text) || EndsWith(Expediente; TextSearchBox1_1.Text))
-                ) ||
-                (Dropdown1.Selected.Value = "Representante Legal" && 
-                    (StartsWith('Representante Legal'; TextSearchBox1_1.Text) || EndsWith('Representante Legal'; TextSearchBox1_1.Text))
-                ) ||
-                (Dropdown1.Selected.Value = "Celular Emp. Transp" && 
-                    (StartsWith('Celular Emp. Transp'; TextSearchBox1_1.Text) || EndsWith('Celular Emp. Transp'; TextSearchBox1_1.Text))
-                ) ||
-                (Dropdown1.Selected.Value = "Celular Representante legal" && 
-                    (StartsWith('Celular Representante legal'; TextSearchBox1_1.Text) || EndsWith('Celular Representante legal'; TextSearchBox1_1.Text))
-                )
-            );
-            "Codigo";
-            "GroupLocalTrans"
-        );
-        "FirstEmpresaLocal"; First(GroupLocalTrans);
-        "NombreEmpresaLocal"; First(GroupLocalTrans).Title
-    );
-    "NombreEmpresaLocal";
-    If(SortDescending1; SortOrder.Descending; SortOrder.Ascending)
-)
+UpdateContext({locShowPopupBorrar: false});
+
+If(
+    !IsBlank(BrowseGallery1.Selected);
+    With(
+        {registroSeleccionado: BrowseGallery1.Selected};
+        If(
+            IsEmpty(Errors([@'Directorio Final Local']; registroSeleccionado));
+            Remove([@'Directorio Final Local']; registroSeleccionado);
+            Notify("No se pudo eliminar el registro", NotificationType.Error)
+        )
+    )
+);
+
+Navigate(BrowseScreen1; ScreenTransition.None)

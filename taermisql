@@ -1,26 +1,33 @@
-$value = $cols[$col].Trim()  # Limpiar espacios
-
-# Si es columna F, G, L o M (índices 6, 7, 12, 13)
-if (($col + 1) -in @(6, 7, 12, 13)) {
-    # Intentar convertir valor si tiene 8 dígitos
-    if ($value -match '^\d{8}$') {
-        try {
-            $year = [int]$value.Substring(0,4)
-            $month = [int]$value.Substring(4,2)
-            $day = [int]$value.Substring(6,2)
-            $date = Get-Date -Year $year -Month $month -Day $day
-            $cell.Value2 = $date
-            $cell.NumberFormat = "dd/mm/yyyy"
-        } catch {
-            $cell.NumberFormat = "@"
-            $cell.Value2 = $value
-        }
-    } else {
-        $cell.NumberFormat = "@"
-        $cell.Value2 = $value
-    }
-} else {
-    # Forzar a texto
-    $cell.NumberFormat = "@"
-    $cell.Value2 = $value
-}
+SortByColumns(
+    AddColumns(
+        GroupBy(
+            Filter(
+                [@'Directorio Final Local'];
+                (Dropdown1.Selected.Value = "Código" && StartsWith(Codigo; TextSearchBox1_1.Text)) ||
+                (Dropdown1.Selected.Value = "RUC" && StartsWith('RUC/RUT/CUIT de la Emp. Transporte'; TextSearchBox1_1.Text)) ||
+                (Dropdown1.Selected.Value = "Nacionalidad" && StartsWith(Nacionalidad; TextSearchBox1_1.Text)) ||
+                (Dropdown1.Selected.Value = "Nombre" && 
+                    (StartsWith(Title; TextSearchBox1_1.Text) || EndsWith(Title; TextSearchBox1_1.Text))
+                ) ||
+                (Dropdown1.Selected.Value = "Expediente" && 
+                    (StartsWith(Expediente; TextSearchBox1_1.Text) || EndsWith(Expediente; TextSearchBox1_1.Text))
+                ) ||
+                (Dropdown1.Selected.Value = "Representante Legal" && 
+                    (StartsWith('Representante Legal'; TextSearchBox1_1.Text) || EndsWith('Representante Legal'; TextSearchBox1_1.Text))
+                ) ||
+                (Dropdown1.Selected.Value = "Celular Emp. Transp" && 
+                    (StartsWith('Celular Emp. Transp'; TextSearchBox1_1.Text) || EndsWith('Celular Emp. Transp'; TextSearchBox1_1.Text))
+                ) ||
+                (Dropdown1.Selected.Value = "Celular Representante legal" && 
+                    (StartsWith('Celular Representante legal'; TextSearchBox1_1.Text) || EndsWith('Celular Representante legal'; TextSearchBox1_1.Text))
+                )
+            );
+            "Codigo";
+            "GroupLocalTrans"
+        );
+        "FirstEmpresaLocal"; First(GroupLocalTrans);
+        "NombreEmpresaLocal"; First(GroupLocalTrans).Title
+    );
+    "NombreEmpresaLocal";
+    If(SortDescending1; SortOrder.Descending; SortOrder.Ascending)
+)

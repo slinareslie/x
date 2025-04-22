@@ -1,4 +1,4 @@
-# Ordenar los datos por la columna L (12) de forma descendente
+# ====================== ORDENAR POR TOTAL EN HORAS (Columna L) ======================
 $startRow = 4
 $endRow = $data.Length + 3
 $sortRange = $worksheet.Range("A$startRow", $worksheet.Cells.Item($endRow, $headers.Length))
@@ -6,10 +6,10 @@ $worksheet.Sort.SortFields.Clear()
 $worksheet.Sort.SortFields.Add(
     $Key: $worksheet.Range("L$startRow", "L$endRow"),
     $SortOn: 0, # xlSortOnValues
-    $Order: 2,  # xlDescending
+    $Order: 2,  # xlDescending
     $DataOption: 0
 )
 
 $worksheet.Sort.SetRange($sortRange)
-$worksheet.Sort.Header = 1  # xlYes (tiene encabezado)
+$worksheet.Sort.Header = 1  # xlYes (con encabezado)
 $worksheet.Sort.Apply()

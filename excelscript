@@ -1,16 +1,10 @@
-# ====================== ORDENAR POR TOTAL EN HORAS (Columna L) ======================
-$startRow = 4
-$endRow = $data.Length + 3
-$sortRange = $worksheet.Range("A$startRow", $worksheet.Cells.Item($endRow, $headers.Length))
-$worksheet.Sort.SortFields.Clear()
-$worksheet.Sort.SortFields.Add(
-    $worksheet.Range("L$startRow", "L$endRow"),
-    0,  # xlSortOnValues
-    2,  # xlDescending
-    $null,
-    0   # xlSortNormal
-)
-
-$worksheet.Sort.SetRange($sortRange)
-$worksheet.Sort.Header = 1  # xlYes (con encabezado)
-$worksheet.Sort.Apply()
+# ====================== RESALTAR FILAS CON MÁS DE 96 HORAS EN LA COLUMNA L ======================
+for ($row = 4; $row -lt ($data.Length + 4); $row++) {
+    $valorHoras = $worksheet.Cells.Item($row, 12).Value2
+    if ($valorHoras -gt 96) {
+        $fila = $worksheet.Range("A$row", $worksheet.Cells.Item($row, $headers.Length))
+        $fila.Font.Underline = 2  # xlUnderlineStyleDouble
+        # También puedes usar otros formatos como cambiar color de fondo o texto si lo prefieres:
+        # $fila.Interior.ColorIndex = 6  # Amarillo por ejemplo
+    }
+}

@@ -1,80 +1,13 @@
-$csvPath = "D:\SEBASTIAN\Transportista Final\consulta_resultado.csv"
-$excelPath = "D:\Usuarios\jmamanic\SUNAT\3G0140 Sección de Manifiestos - Directorio Base de Datos SIGAD\consulta_resultado.xlsx"
+# Ruta del archivo
+$filePath = "D:\trash.txt"
 
-# Leer CSV como texto plano
-$lines = Get-Content -Path $csvPath
-if ($lines.Count -eq 0) {
-    Write-Host "El archivo CSV está vacío."
-    exit
-}
+# Crear el archivo con contenido
+"trash" | Out-File -FilePath $filePath -Encoding UTF8
+Write-Host "Archivo creado: $filePath"
 
-$headers = $lines[0].Split('|')
-$dataLines = $lines[1..($lines.Count - 1)]
+# Esperar 40 segundos
+Start-Sleep -Seconds 40
 
-# Guardar procesos existentes de Excel
-$initialPids = Get-Process -Name "EXCEL" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id
-
-# Iniciar Excel
-$excelApp = New-Object -ComObject Excel.Application
-$excelApp.Visible = $false
-$excelApp.DisplayAlerts = $false
-
-# Abrir workbook existente
-$workbook = $excelApp.Workbooks.Open($excelPath)
-$worksheet = $workbook.Sheets.Item(1)
-
-# Obtener la tabla existente
-$table = $worksheet.ListObjects.Item("TablaSigad")
-
-# Eliminar filas de datos (excepto encabezados)
-while ($table.DataBodyRange.Rows.Count -gt 0) {
-    $table.DataBodyRange.Rows.Item(1).Delete()
-}
-
-# Insertar los datos desde el CSV
-$rowOffset = 1  # porque las tablas empiezan en la fila de encabezado + 1
-
-foreach ($line in $dataLines) {
-    $cols = $line.Split('|')
-    $newRow = $table.ListRows.Add()
-    for ($col = 0; $col -lt $cols.Count; $col++) {
-        $value = $cols[$col].Trim()
-        $cell = $newRow.Range.Cells.Item(1, $col + 1)
-
-        # Validar si es una fecha
-        if (($col + 1) -in @(6, 7, 12, 13) -and $value -match '^\d{8}$') {
-            $dateStr = $value.Substring(0,4) + "-" + $value.Substring(4,2) + "-" + $value.Substring(6,2)
-            try {
-                $date = [datetime]::ParseExact($dateStr, "yyyy-MM-dd", $null)
-                $cell.Value2 = $date
-                $cell.NumberFormat = "dd/mm/yyyy"
-            } catch {
-                $cell.Value2 = $value
-                $cell.NumberFormat = "@"
-            }
-        } else {
-            $cell.Value2 = $value
-            $cell.NumberFormat = "@"
-        }
-    }
-}
-
-# Guardar y cerrar
-$workbook.Save()
-$workbook.Close($false)
-$excelApp.Quit()
-
-# Cerrar proceso de Excel creado por el script
-$finalPids = Get-Process -Name "EXCEL" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id
-$createdPids = $finalPids | Where-Object { $initialPids -notcontains $_ }
-if ($createdPids) {
-    Stop-Process -Id $createdPids -Force -ErrorAction SilentlyContinue
-}
-
-# Liberar objetos COM
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($table) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($worksheet) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excelApp) | Out-Null
-[GC]::Collect()
-[GC]::WaitForPendingFinalizers()
+# Eliminar el archivo
+Remove-Item -Path $filePath -Force
+Write-Host "Archivo eliminado: $filePath"

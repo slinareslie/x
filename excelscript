@@ -1,13 +1,1 @@
-# Ruta del archivo
-$filePath = "D:\trash.txt"
-
-# Crear el archivo con contenido
-"trash" | Out-File -FilePath $filePath -Encoding UTF8
-Write-Host "Archivo creado: $filePath"
-
-# Esperar 40 segundos
-Start-Sleep -Seconds 40
-
-# Eliminar el archivo
-Remove-Item -Path $filePath -Force
-Write-Host "Archivo eliminado: $filePath"
+=Y(D2<>"", F2<>BUSCARV(D2, Hoja2!B:A, 2, FALSO))

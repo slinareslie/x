@@ -1,1 +1,2 @@
-=Y(K2<>""; H2<>""; NO(ESNUMERO(COINCIDIR(1; (Hoja2!B:B=K2)*(Hoja2!A:A=H2); 0))))
+=Y(K2<>""; H2<>""; SUMAPRODUCTO((Hoja2!$B$2:$B$100=K2)*(Hoja2!$A$2:$A$100=H2))=0)
+

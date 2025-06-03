@@ -1,0 +1,52 @@
+@startuml
+title Diagrama de flujo detallado - Proceso de gestión de solicitudes con Microsoft Forms y Power Automate
+
+start
+
+:Transportista recibe enlace del formulario Microsoft Forms por WhatsApp;
+:Transportista abre el enlace del formulario;
+:Transportista completa los campos requeridos en el formulario;
+:Transportista envía el formulario;
+
+note right
+  El formulario queda registrado
+  automáticamente en Microsoft Forms.
+end note
+
+:Microsoft Forms registra la nueva solicitud;
+
+:Power Automate detecta nuevo envío en Microsoft Forms;
+
+note right
+  Power Automate inicia proceso
+  de automatización.
+end note
+
+:Power Automate procesa la información recibida;
+:Power Automate formatea la solicitud para correo;
+
+if (¿Formato correcto?) then (sí)
+  :Power Automate envía correo formateado al área de Manifiestos;
+else (no)
+  :Power Automate notifica error y espera corrección;
+  stop
+endif
+
+:Área de Manifiestos recibe correo con la solicitud;
+
+:Personal revisa y clasifica la solicitud;
+
+if (¿Solicitud puede ser atendida directamente?) then (sí)
+  :Manifiestos atienden la solicitud;
+else (no)
+  :Manifiestos redirigen solicitud al área correspondiente;
+endif
+
+:Manifiestos envían mensaje vía WhatsApp al transportista;
+note right
+  Confirmando que la solicitud
+  está en proceso de atención.
+end note
+
+stop
+@enduml

@@ -1,3 +1,4 @@
+https://www.canva.com/design/DAGpWcqbi_M/oXTXOmOPVUplXw_trzuFeA/edit
 @startuml
 title Diagrama de flujo detallado - Proceso de gestión de solicitudes con Microsoft Forms y Power Automate
 

@@ -1,3 +1,7 @@
+=TEXTO(FECHA(DERECHA(D2;2)+2000;EXTRAE(D2;4;2);IZQUIERDA(D2;2)) + EXTRAE(D2;10;2)/24 + EXTRAE(D2;13;2)/1440 + EXTRAE(D2;16;2)/86400; "dd/mm/aa hh:mm:ss")
+
+
+
 Sub CorregirFechasAnglosajonas()
 
     Dim ws As Worksheet

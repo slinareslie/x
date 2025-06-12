@@ -1,135 +1,75 @@
-' Guardar entradas y salidas como texto
-For i = 2 To ultimaFila
-    placa = wsDatos.Cells(i, "G").Value
-    If wsDatos.Cells(i, "B").Value = "01" Then
-        entradas.Add Array(placa, wsDatos.Range("D" & i).Text) ' Leer como texto visible
-    ElseIf wsDatos.Cells(i, "B").Value = "02" Then
-        salidas.Add Array(placa, wsDatos.Range("H" & i).Text)
-    End If
-Next i
-
-
-With wsParejas
-    .Cells(filaResultado, 1).Value = placa
-    .Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
-    .Cells(filaResultado, 3).Value = salidas(i)(1)
-    
-    ' Calcular diferencia (solo si ambas fechas son válidas)
-    On Error Resume Next
-    Dim fEntrada As Date, fSalida As Date
-    fEntrada = CDate(entradas(mejorIndex)(1))
-    fSalida = CDate(salidas(i)(1))
-    If Err.Number = 0 Then
-        .Cells(filaResultado, 4).Value = Round((fSalida - fEntrada) * 1440, 2)
-    Else
-        .Cells(filaResultado, 4).Value = "Error"
-    End If
-    On Error GoTo 0
-End With
-
-
-
-
-
-wsParejas.Cells(filaResultado, 2).Value = Format(entradas(mejorIndex)(1), "dd/mm/yy hh:mm:ss")
-wsParejas.Cells(filaResultado, 3).Value = Format(fechaSalida, "dd/mm/yy hh:mm:ss")
-
-
-With wsParejas
-    .Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
-    .Cells(filaResultado, 2).NumberFormat = "dd/mm/yy hh:mm:ss"
-    
-    .Cells(filaResultado, 3).Value = fechaSalida
-    .Cells(filaResultado, 3).NumberFormat = "dd/mm/yy hh:mm:ss"
-End With
-
-
-
-
-
-
-Sub EmparejarPorFechaSalida()
+Sub EmparejarFechasSinConvertir()
 
     Dim wsDatos As Worksheet, wsParejas As Worksheet
-    Dim entradas As Collection, salidas As Collection
     Dim ultimaFila As Long, i As Long, j As Long
-    Dim placa As String
-    Dim fechaEntrada As Date, fechaSalida As Date
+    Dim entradas As Collection, salidas As Collection
     Dim usada() As Boolean
+    Dim filaResultado As Long
 
-    ' Definir hojas
     Set wsDatos = ThisWorkbook.Sheets("Datos")
-    
+
+    ' Crear o limpiar hoja "Parejas"
     On Error Resume Next
     Application.DisplayAlerts = False
     ThisWorkbook.Sheets("Parejas").Delete
     Application.DisplayAlerts = True
     On Error GoTo 0
-    
     Set wsParejas = ThisWorkbook.Sheets.Add
     wsParejas.Name = "Parejas"
-    
-    ' Titulos
-    wsParejas.Range("A1:D1").Value = Array("Placa", "Fecha Entrada", "Fecha Salida", "Diferencia (minutos)")
 
-    ' Obtener última fila
-    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
+    wsParejas.Range("A1:D1").Value = Array("Placa", "Fecha Entrada", "Fecha Salida", "Diferencia")
 
-    ' Crear colecciones
+    ' Inicializar colecciones
     Set entradas = New Collection
     Set salidas = New Collection
 
-    ' Guardar entradas y salidas
+    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
+
+    ' Leer datos como texto, exactamente como están visualmente
     For i = 2 To ultimaFila
-        placa = wsDatos.Cells(i, "G").Value
-        If wsDatos.Cells(i, "B").Value = "01" Then
-            entradas.Add Array(placa, wsDatos.Cells(i, "D").Value)
-        ElseIf wsDatos.Cells(i, "B").Value = "02" Then
-            salidas.Add Array(placa, wsDatos.Cells(i, "H").Value)
+        Dim tipo As String: tipo = Trim(wsDatos.Cells(i, "B").Value)
+        Dim placa As String: placa = Trim(wsDatos.Cells(i, "G").Value)
+
+        If tipo = "01" Then
+            entradas.Add Array(placa, wsDatos.Range("D" & i).Text)
+        ElseIf tipo = "02" Then
+            salidas.Add Array(placa, wsDatos.Range("H" & i).Text)
         End If
     Next i
 
-    ' Marcar entradas usadas
     ReDim usada(1 To entradas.Count)
-    
-    Dim filaResultado As Long
     filaResultado = 2
 
-    ' Emparejar salidas con entrada anterior más cercana
+    ' Emparejar cada salida con entrada más reciente anterior
     For i = 1 To salidas.Count
-        Dim mejorDiferencia As Double: mejorDiferencia = 1E+20
         Dim mejorIndex As Long: mejorIndex = -1
+        Dim placaSalida As String: placaSalida = salidas(i)(0)
+        Dim fechaSalidaTexto As String: fechaSalidaTexto = salidas(i)(1)
 
-        placa = salidas(i)(0)
-        fechaSalida = salidas(i)(1)
-
-        ' Buscar entrada más reciente antes de la salida
+        ' Buscar entrada sin usar que sea anterior (en orden de aparición)
         For j = 1 To entradas.Count
             If Not usada(j) Then
-                If entradas(j)(0) = placa Then
-                    fechaEntrada = entradas(j)(1)
-                    If fechaEntrada <= fechaSalida Then
-                        If fechaSalida - fechaEntrada < mejorDiferencia Then
-                            mejorDiferencia = fechaSalida - fechaEntrada
-                            mejorIndex = j
-                        End If
-                    End If
+                If entradas(j)(0) = placaSalida Then
+                    mejorIndex = j
                 End If
             End If
         Next j
 
-        ' Si se encontró una pareja válida
+        ' Si encontró una entrada para esta salida
         If mejorIndex <> -1 Then
             usada(mejorIndex) = True
-            wsParejas.Cells(filaResultado, 1).Value = placa
-            wsParejas.Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
-            wsParejas.Cells(filaResultado, 3).Value = fechaSalida
-            wsParejas.Cells(filaResultado, 4).Value = Round((fechaSalida - entradas(mejorIndex)(1)) * 1440, 2)
+
+            With wsParejas
+                .Cells(filaResultado, 1).Value = placaSalida
+                .Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
+                .Cells(filaResultado, 3).Value = fechaSalidaTexto
+                .Cells(filaResultado, 4).Value = "(No calculado)"
+            End With
+
             filaResultado = filaResultado + 1
         End If
     Next i
 
-    MsgBox "Emparejamiento completado. Revisar hoja 'Parejas'."
+    MsgBox "Emparejamiento completado. Las fechas se han copiado exactamente como se ven."
 
 End Sub
- 

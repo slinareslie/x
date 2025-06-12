@@ -1,93 +1,117 @@
 Sub EmparejarPorFechaSalida()
 
-   Dim wsDatos As Worksheet, wsParejas As Worksheet
-   Dim entradas As Collection, salidas As Collection
-   Dim ultimaFila As Long, i As Long, j As Long
-   Dim placa As String
-   Dim fechaEntrada As Date, fechaSalida As Date
-   Dim usada() As Boolean
+    Dim wsDatos As Worksheet, wsParejas As Worksheet, wsSinPareja As Worksheet
+    Dim entradas As Collection, salidas As Collection
+    Dim ultimaFila As Long, i As Long, j As Long
+    Dim placa As String
+    Dim fechaEntrada As Date, fechaSalida As Date
+    Dim usadaEntrada() As Boolean, usadaSalida() As Boolean
 
-   ' Definir hojas
-   Set wsDatos = ThisWorkbook.Sheets("Datos")
-   
-   On Error Resume Next
-   Application.DisplayAlerts = False
-   ThisWorkbook.Sheets("Parejas").Delete
-   Application.DisplayAlerts = True
-   On Error GoTo 0
-   
-   Set wsParejas = ThisWorkbook.Sheets.Add
-   wsParejas.Name = "Parejas"
-   
-   ' Títulos
-   wsParejas.Range("A1:H1").Value = Array("Placa", "Día Entrada", "Mes Entrada", "Año Entrada", "Día Salida", "Mes Salida", "Año Salida", "Diferencia (minutos)")
+    ' Definir hoja de datos
+    Set wsDatos = ThisWorkbook.Sheets("Datos")
+    
+    ' Eliminar hojas anteriores si existen
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    ThisWorkbook.Sheets("Parejas").Delete
+    ThisWorkbook.Sheets("SinPareja").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    
+    ' Crear hojas nuevas
+    Set wsParejas = ThisWorkbook.Sheets.Add: wsParejas.Name = "Parejas"
+    Set wsSinPareja = ThisWorkbook.Sheets.Add: wsSinPareja.Name = "SinPareja"
+    
+    ' Encabezados
+    wsParejas.Range("A1:H1").Value = Array("Placa", "Día Entrada", "Mes Entrada", "Año Entrada", "Día Salida", "Mes Salida", "Año Salida", "Diferencia (minutos)")
+    wsSinPareja.Range("A1:D1").Value = Array("Placa", "Tipo", "Fecha", "Motivo")
 
-   ' Obtener última fila
-   ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
+    ' Obtener última fila
+    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
 
-   ' Crear colecciones
-   Set entradas = New Collection
-   Set salidas = New Collection
+    ' Crear colecciones
+    Set entradas = New Collection
+    Set salidas = New Collection
 
-   ' Guardar entradas y salidas
-   For i = 2 To ultimaFila
-       placa = wsDatos.Cells(i, "I").Value
-       If wsDatos.Cells(i, "B").Value = "01" Then
-           entradas.Add Array(placa, wsDatos.Cells(i, "D").Value)
-       ElseIf wsDatos.Cells(i, "B").Value = "02" Then
-           salidas.Add Array(placa, wsDatos.Cells(i, "H").Value)
-       End If
-   Next i
+    ' Leer datos
+    For i = 2 To ultimaFila
+        placa = wsDatos.Cells(i, "I").Value
+        If wsDatos.Cells(i, "B").Value = "01" Then
+            entradas.Add Array(placa, wsDatos.Cells(i, "D").Value)
+        ElseIf wsDatos.Cells(i, "B").Value = "02" Then
+            salidas.Add Array(placa, wsDatos.Cells(i, "H").Value)
+        End If
+    Next i
 
-   ' Marcar entradas usadas
-   ReDim usada(1 To entradas.Count)
-   
-   Dim filaResultado As Long
-   filaResultado = 2
+    ReDim usadaEntrada(1 To entradas.Count)
+    ReDim usadaSalida(1 To salidas.Count)
+    
+    Dim filaResultado As Long: filaResultado = 2
+    Dim filaSinPareja As Long: filaSinPareja = 2
 
-   ' Emparejar salidas con entrada anterior más cercana
-   For i = 1 To salidas.Count
-       Dim mejorDiferencia As Double: mejorDiferencia = 1E+20
-       Dim mejorIndex As Long: mejorIndex = -1
+    ' Emparejar
+    For i = 1 To salidas.Count
+        Dim mejorDiferencia As Double: mejorDiferencia = 1E+20
+        Dim mejorIndex As Long: mejorIndex = -1
 
-       placa = salidas(i)(0)
-       fechaSalida = salidas(i)(1)
+        placa = salidas(i)(0)
+        fechaSalida = salidas(i)(1)
 
-       ' Buscar entrada más reciente antes de la salida
-       For j = 1 To entradas.Count
-           If Not usada(j) Then
-               If entradas(j)(0) = placa Then
-                   fechaEntrada = entradas(j)(1)
-                   If fechaEntrada <= fechaSalida Then
-                       If fechaSalida - fechaEntrada < mejorDiferencia Then
-                           mejorDiferencia = fechaSalida - fechaEntrada
-                           mejorIndex = j
-                       End If
-                   End If
-               End If
-           End If
-       Next j
+        ' Buscar entrada más cercana anterior
+        For j = 1 To entradas.Count
+            If Not usadaEntrada(j) Then
+                If entradas(j)(0) = placa Then
+                    fechaEntrada = entradas(j)(1)
+                    If fechaEntrada <= fechaSalida Then
+                        If fechaSalida - fechaEntrada < mejorDiferencia Then
+                            mejorDiferencia = fechaSalida - fechaEntrada
+                            mejorIndex = j
+                        End If
+                    End If
+                End If
+            End If
+        Next j
 
-       ' Si se encontró una pareja válida
-       If mejorIndex <> -1 Then
-           usada(mejorIndex) = True
-           fechaEntrada = entradas(mejorIndex)(1)
-           
-           wsParejas.Cells(filaResultado, 1).Value = placa
-           wsParejas.Cells(filaResultado, 2).Value = Day(fechaEntrada)
-           wsParejas.Cells(filaResultado, 3).Value = Month(fechaEntrada)
-           wsParejas.Cells(filaResultado, 4).Value = Year(fechaEntrada)
-           
-           wsParejas.Cells(filaResultado, 5).Value = Day(fechaSalida)
-           wsParejas.Cells(filaResultado, 6).Value = Month(fechaSalida)
-           wsParejas.Cells(filaResultado, 7).Value = Year(fechaSalida)
-           
-           wsParejas.Cells(filaResultado, 8).Value = Round((fechaSalida - fechaEntrada) * 1440, 2)
-           
-           filaResultado = filaResultado + 1
-       End If
-   Next i
+        ' Emparejar o marcar como sin pareja
+        If mejorIndex <> -1 Then
+            usadaEntrada(mejorIndex) = True
+            usadaSalida(i) = True
+            fechaEntrada = entradas(mejorIndex)(1)
+            
+            wsParejas.Cells(filaResultado, 1).Value = placa
+            wsParejas.Cells(filaResultado, 2).Value = Day(fechaEntrada)
+            wsParejas.Cells(filaResultado, 3).Value = Month(fechaEntrada)
+            wsParejas.Cells(filaResultado, 4).Value = Year(fechaEntrada)
+            wsParejas.Cells(filaResultado, 5).Value = Day(fechaSalida)
+            wsParejas.Cells(filaResultado, 6).Value = Month(fechaSalida)
+            wsParejas.Cells(filaResultado, 7).Value = Year(fechaSalida)
+            wsParejas.Cells(filaResultado, 8).Value = Round((fechaSalida - fechaEntrada) * 1440, 2)
+            filaResultado = filaResultado + 1
+        End If
+    Next i
 
-   MsgBox "Emparejamiento completado. Revisar hoja 'Parejas'."
+    ' Registrar entradas sin salida
+    For i = 1 To entradas.Count
+        If Not usadaEntrada(i) Then
+            wsSinPareja.Cells(filaSinPareja, 1).Value = entradas(i)(0)
+            wsSinPareja.Cells(filaSinPareja, 2).Value = "Entrada"
+            wsSinPareja.Cells(filaSinPareja, 3).Value = entradas(i)(1)
+            wsSinPareja.Cells(filaSinPareja, 4).Value = "Sin salida emparejada"
+            filaSinPareja = filaSinPareja + 1
+        End If
+    Next i
+
+    ' Registrar salidas sin entrada
+    For i = 1 To salidas.Count
+        If Not usadaSalida(i) Then
+            wsSinPareja.Cells(filaSinPareja, 1).Value = salidas(i)(0)
+            wsSinPareja.Cells(filaSinPareja, 2).Value = "Salida"
+            wsSinPareja.Cells(filaSinPareja, 3).Value = salidas(i)(1)
+            wsSinPareja.Cells(filaSinPareja, 4).Value = "Sin entrada emparejada"
+            filaSinPareja = filaSinPareja + 1
+        End If
+    Next i
+
+    MsgBox "Emparejamiento completado. Revisar hojas 'Parejas' y 'SinPareja'."
 
 End Sub

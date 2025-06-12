@@ -1,37 +1,84 @@
-=CONCATENAR(EXTRAE(D2;4;2);"/";IZQUIERDA(D2;2);"/";EXTRAE(D2;7;4);" ";EXTRAE(D2;12;8))
+Sub EmparejarPorFechaSalida()
 
+    Dim wsDatos As Worksheet, wsParejas As Worksheet
+    Dim entradas As Collection, salidas As Collection
+    Dim ultimaFila As Long, i As Long, j As Long
+    Dim placa As String
+    Dim fechaEntrada As Date, fechaSalida As Date
+    Dim usada() As Boolean
 
-=TEXTO(FECHA(DERECHA(D2;2)+2000;EXTRAE(D2;4;2);IZQUIERDA(D2;2)) + EXTRAE(D2;10;2)/24 + EXTRAE(D2;13;2)/1440 + EXTRAE(D2;16;2)/86400; "dd/mm/aa hh:mm:ss")
+    ' Definir hojas
+    Set wsDatos = ThisWorkbook.Sheets("Datos")
+    
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    ThisWorkbook.Sheets("Parejas").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    
+    Set wsParejas = ThisWorkbook.Sheets.Add
+    wsParejas.Name = "Parejas"
+    
+    ' Titulos
+    wsParejas.Range("A1:D1").Value = Array("Placa", "Fecha Entrada", "Fecha Salida", "Diferencia (minutos)")
 
+    ' Obtener última fila
+    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
 
+    ' Crear colecciones
+    Set entradas = New Collection
+    Set salidas = New Collection
 
-Sub CorregirFechasAnglosajonas()
-
-    Dim ws As Worksheet
-    Set ws = ThisWorkbook.Sheets("Parejas")
-
-    Dim ultimaFila As Long, i As Long
-    ultimaFila = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-
-    Dim celdas As Range
-    Set celdas = ws.Range("B2:C" & ultimaFila) ' Entradas y salidas
-
-    Dim celda As Range
-    For Each celda In celdas
-        If IsDate(celda.Value) Then
-            Dim valorFecha As Date: valorFecha = celda.Value
-            Dim d As Integer: d = Day(valorFecha)
-            Dim m As Integer: m = Month(valorFecha)
-
-            ' Si el día está entre 1 y 12 y el mes también, puede estar invertido
-            If d <= 12 And m <= 12 And m <> d Then
-                ' Probable formato mal interpretado -> lo volvemos texto en orden latino
-                celda.Value = Format(valorFecha, "dd/mm/yyyy hh:mm:ss")
-                celda.NumberFormat = "@"
-            End If
+    ' Guardar entradas y salidas
+    For i = 2 To ultimaFila
+        placa = wsDatos.Cells(i, "G").Value
+        If wsDatos.Cells(i, "B").Value = "01" Then
+            entradas.Add Array(placa, wsDatos.Cells(i, "D").Value)
+        ElseIf wsDatos.Cells(i, "B").Value = "02" Then
+            salidas.Add Array(placa, wsDatos.Cells(i, "H").Value)
         End If
-    Next celda
+    Next i
 
-    MsgBox "Fechas corregidas en formato latino (dd/mm/yyyy hh:mm:ss)."
+    ' Marcar entradas usadas
+    ReDim usada(1 To entradas.Count)
+    
+    Dim filaResultado As Long
+    filaResultado = 2
+
+    ' Emparejar salidas con entrada anterior más cercana
+    For i = 1 To salidas.Count
+        Dim mejorDiferencia As Double: mejorDiferencia = 1E+20
+        Dim mejorIndex As Long: mejorIndex = -1
+
+        placa = salidas(i)(0)
+        fechaSalida = salidas(i)(1)
+
+        ' Buscar entrada más reciente antes de la salida
+        For j = 1 To entradas.Count
+            If Not usada(j) Then
+                If entradas(j)(0) = placa Then
+                    fechaEntrada = entradas(j)(1)
+                    If fechaEntrada <= fechaSalida Then
+                        If fechaSalida - fechaEntrada < mejorDiferencia Then
+                            mejorDiferencia = fechaSalida - fechaEntrada
+                            mejorIndex = j
+                        End If
+                    End If
+                End If
+            End If
+        Next j
+
+        ' Si se encontró una pareja válida
+        If mejorIndex <> -1 Then
+            usada(mejorIndex) = True
+            wsParejas.Cells(filaResultado, 1).Value = placa
+            wsParejas.Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
+            wsParejas.Cells(filaResultado, 3).Value = fechaSalida
+            wsParejas.Cells(filaResultado, 4).Value = Round((fechaSalida - entradas(mejorIndex)(1)) * 1440, 2)
+            filaResultado = filaResultado + 1
+        End If
+    Next i
+
+    MsgBox "Emparejamiento completado. Revisar hoja 'Parejas'."
 
 End Sub

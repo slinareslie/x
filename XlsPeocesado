@@ -1,75 +1,30 @@
-Sub EmparejarFechasSinConvertir()
+Sub CorregirFechasAnglosajonas()
 
-    Dim wsDatos As Worksheet, wsParejas As Worksheet
-    Dim ultimaFila As Long, i As Long, j As Long
-    Dim entradas As Collection, salidas As Collection
-    Dim usada() As Boolean
-    Dim filaResultado As Long
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Parejas")
 
-    Set wsDatos = ThisWorkbook.Sheets("Datos")
+    Dim ultimaFila As Long, i As Long
+    ultimaFila = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
 
-    ' Crear o limpiar hoja "Parejas"
-    On Error Resume Next
-    Application.DisplayAlerts = False
-    ThisWorkbook.Sheets("Parejas").Delete
-    Application.DisplayAlerts = True
-    On Error GoTo 0
-    Set wsParejas = ThisWorkbook.Sheets.Add
-    wsParejas.Name = "Parejas"
+    Dim celdas As Range
+    Set celdas = ws.Range("B2:C" & ultimaFila) ' Entradas y salidas
 
-    wsParejas.Range("A1:D1").Value = Array("Placa", "Fecha Entrada", "Fecha Salida", "Diferencia")
+    Dim celda As Range
+    For Each celda In celdas
+        If IsDate(celda.Value) Then
+            Dim valorFecha As Date: valorFecha = celda.Value
+            Dim d As Integer: d = Day(valorFecha)
+            Dim m As Integer: m = Month(valorFecha)
 
-    ' Inicializar colecciones
-    Set entradas = New Collection
-    Set salidas = New Collection
-
-    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
-
-    ' Leer datos como texto, exactamente como están visualmente
-    For i = 2 To ultimaFila
-        Dim tipo As String: tipo = Trim(wsDatos.Cells(i, "B").Value)
-        Dim placa As String: placa = Trim(wsDatos.Cells(i, "G").Value)
-
-        If tipo = "01" Then
-            entradas.Add Array(placa, wsDatos.Range("D" & i).Text)
-        ElseIf tipo = "02" Then
-            salidas.Add Array(placa, wsDatos.Range("H" & i).Text)
-        End If
-    Next i
-
-    ReDim usada(1 To entradas.Count)
-    filaResultado = 2
-
-    ' Emparejar cada salida con entrada más reciente anterior
-    For i = 1 To salidas.Count
-        Dim mejorIndex As Long: mejorIndex = -1
-        Dim placaSalida As String: placaSalida = salidas(i)(0)
-        Dim fechaSalidaTexto As String: fechaSalidaTexto = salidas(i)(1)
-
-        ' Buscar entrada sin usar que sea anterior (en orden de aparición)
-        For j = 1 To entradas.Count
-            If Not usada(j) Then
-                If entradas(j)(0) = placaSalida Then
-                    mejorIndex = j
-                End If
+            ' Si el día está entre 1 y 12 y el mes también, puede estar invertido
+            If d <= 12 And m <= 12 And m <> d Then
+                ' Probable formato mal interpretado -> lo volvemos texto en orden latino
+                celda.Value = Format(valorFecha, "dd/mm/yyyy hh:mm:ss")
+                celda.NumberFormat = "@"
             End If
-        Next j
-
-        ' Si encontró una entrada para esta salida
-        If mejorIndex <> -1 Then
-            usada(mejorIndex) = True
-
-            With wsParejas
-                .Cells(filaResultado, 1).Value = placaSalida
-                .Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
-                .Cells(filaResultado, 3).Value = fechaSalidaTexto
-                .Cells(filaResultado, 4).Value = "(No calculado)"
-            End With
-
-            filaResultado = filaResultado + 1
         End If
-    Next i
+    Next celda
 
-    MsgBox "Emparejamiento completado. Las fechas se han copiado exactamente como se ven."
+    MsgBox "Fechas corregidas en formato latino (dd/mm/yyyy hh:mm:ss)."
 
 End Sub

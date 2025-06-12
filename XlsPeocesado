@@ -3,10 +3,9 @@ Sub EmparejarSecuencial()
     Dim wsDatos As Worksheet, wsParejas As Worksheet, wsSinPareja As Worksheet
     Dim ultimaFila As Long, i As Long, filaResultado As Long, filaSinPareja As Long
     Dim dictEventos As Object, eventos As Variant
-    Dim clave As String
+    Dim clave As Variant
     Dim entradaPendiente As Date, tieneEntrada As Boolean
     
-    ' Referencia a la hoja de datos
     Set wsDatos = ThisWorkbook.Sheets("Datos")
     
     ' Eliminar hojas anteriores si existen
@@ -17,18 +16,13 @@ Sub EmparejarSecuencial()
     Application.DisplayAlerts = True
     On Error GoTo 0
     
-    ' Crear hojas nuevas
     Set wsParejas = ThisWorkbook.Sheets.Add: wsParejas.Name = "Parejas"
     Set wsSinPareja = ThisWorkbook.Sheets.Add: wsSinPareja.Name = "SinPareja"
     
-    ' Encabezados
     wsParejas.Range("A1:H1").Value = Array("Placa", "Día Entrada", "Mes Entrada", "Año Entrada", "Día Salida", "Mes Salida", "Año Salida", "Diferencia (minutos)")
     wsSinPareja.Range("A1:G1").Value = Array("Placa", "Tipo", "Día", "Mes", "Año", "Fecha", "Motivo")
     
-    ' Última fila con datos
     ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
-    
-    ' Crear diccionario para agrupar eventos por placa
     Set dictEventos = CreateObject("Scripting.Dictionary")
     
     For i = 2 To ultimaFila
@@ -41,9 +35,9 @@ Sub EmparejarSecuencial()
             Dim tipoEvento As String, fechaEvento As Date
             tipoEvento = wsDatos.Cells(i, "B").Value
             
-            If tipoEvento = "01" Then ' Entrada
+            If tipoEvento = "01" Then
                 fechaEvento = wsDatos.Cells(i, "D").Value
-            ElseIf tipoEvento = "02" Then ' Salida
+            ElseIf tipoEvento = "02" Then
                 fechaEvento = wsDatos.Cells(i, "H").Value
             Else
                 GoTo Saltar
@@ -57,19 +51,22 @@ Saltar:
     filaResultado = 2
     filaSinPareja = 2
     
-    ' Procesar cada placa
-    For Each clave In dictEventos.keys
+    For Each clave In dictEventos.Keys
         eventos = dictEventos(clave)
         tieneEntrada = False
+        
+        MsgBox "Procesando placa: " & clave & vbCrLf & "Eventos registrados: " & eventos.Count
         
         For i = 1 To eventos.Count
             Dim tipo As String, fecha As Date
             tipo = eventos(i)(0)
             fecha = eventos(i)(1)
             
+            MsgBox "Evento " & i & " de " & clave & vbCrLf & "Tipo: " & tipo & vbCrLf & "Fecha: " & fecha
+            
             If tipo = "01" Then ' Entrada
                 If tieneEntrada Then
-                    ' Ya había una entrada pendiente sin salida
+                    MsgBox "Entrada previa sin salida para placa: " & clave & vbCrLf & "Fecha entrada: " & entradaPendiente
                     wsSinPareja.Cells(filaSinPareja, 1).Value = clave
                     wsSinPareja.Cells(filaSinPareja, 2).Value = "Entrada"
                     wsSinPareja.Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
@@ -84,7 +81,7 @@ Saltar:
             
             ElseIf tipo = "02" Then ' Salida
                 If tieneEntrada Then
-                    ' Emparejar entrada con esta salida
+                    MsgBox "Emparejando: " & clave & vbCrLf & "Entrada: " & entradaPendiente & vbCrLf & "Salida: " & fecha
                     wsParejas.Cells(filaResultado, 1).Value = clave
                     wsParejas.Cells(filaResultado, 2).Value = Day(entradaPendiente)
                     wsParejas.Cells(filaResultado, 3).Value = Month(entradaPendiente)
@@ -96,7 +93,7 @@ Saltar:
                     filaResultado = filaResultado + 1
                     tieneEntrada = False
                 Else
-                    ' Salida sin entrada previa
+                    MsgBox "Salida sin entrada previa para placa: " & clave & vbCrLf & "Fecha salida: " & fecha
                     wsSinPareja.Cells(filaSinPareja, 1).Value = clave
                     wsSinPareja.Cells(filaSinPareja, 2).Value = "Salida"
                     wsSinPareja.Cells(filaSinPareja, 3).Value = Day(fecha)
@@ -109,8 +106,8 @@ Saltar:
             End If
         Next i
         
-        ' Entrada final sin emparejar
         If tieneEntrada Then
+            MsgBox "Entrada final sin salida para placa: " & clave & vbCrLf & "Fecha entrada: " & entradaPendiente
             wsSinPareja.Cells(filaSinPareja, 1).Value = clave
             wsSinPareja.Cells(filaSinPareja, 2).Value = "Entrada"
             wsSinPareja.Cells(filaSinPareja, 3).Value = Day(entradaPendiente)

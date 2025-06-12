@@ -1,3 +1,16 @@
+With wsParejas
+    .Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
+    .Cells(filaResultado, 2).NumberFormat = "dd/mm/yy hh:mm:ss"
+    
+    .Cells(filaResultado, 3).Value = fechaSalida
+    .Cells(filaResultado, 3).NumberFormat = "dd/mm/yy hh:mm:ss"
+End With
+
+
+
+
+
+
 Sub EmparejarPorFechaSalida()
 
     Dim wsDatos As Worksheet, wsParejas As Worksheet

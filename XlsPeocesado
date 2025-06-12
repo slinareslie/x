@@ -1,3 +1,7 @@
+wsParejas.Cells(filaResultado, 2).Value = Format(entradas(mejorIndex)(1), "dd/mm/yy hh:mm:ss")
+wsParejas.Cells(filaResultado, 3).Value = Format(fechaSalida, "dd/mm/yy hh:mm:ss")
+
+
 With wsParejas
     .Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
     .Cells(filaResultado, 2).NumberFormat = "dd/mm/yy hh:mm:ss"

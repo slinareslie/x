@@ -1,7 +1,85 @@
-=MINIFS(Datos!H:H, Datos!B:B, "02", Datos!G:G, G2, Datos!H:H, ">="&D2)
+Sub EmparejarEntradasSalidas()
 
+    Dim wsDatos As Worksheet, wsParejas As Worksheet
+    Dim entradas As Collection, salidas As Collection
+    Dim ultimaFila As Long, i As Long, j As Long
+    Dim placa As String
+    Dim fechaEntrada As Date, fechaSalida As Date
+    Dim usada() As Boolean
 
-=(I2-D2)*24*60   'En minutos
+    ' Definir hojas
+    Set wsDatos = ThisWorkbook.Sheets("Datos")
+    
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    ThisWorkbook.Sheets("Parejas").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    
+    Set wsParejas = ThisWorkbook.Sheets.Add
+    wsParejas.Name = "Parejas"
+    
+    ' Titulos
+    wsParejas.Range("A1:D1").Value = Array("Placa", "Fecha Entrada", "Fecha Salida", "Diferencia (minutos)")
 
+    ' Obtener última fila
+    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
 
-=I2-D2   'Formato personalizado para duración
+    ' Crear colecciones
+    Set entradas = New Collection
+    Set salidas = New Collection
+
+    ' Guardar entradas y salidas
+    For i = 2 To ultimaFila
+        placa = wsDatos.Cells(i, "G").Value
+        If wsDatos.Cells(i, "B").Value = "01" Then
+            entradas.Add Array(placa, wsDatos.Cells(i, "D").Value)
+        ElseIf wsDatos.Cells(i, "B").Value = "02" Then
+            salidas.Add Array(placa, wsDatos.Cells(i, "H").Value)
+        End If
+    Next i
+
+    ' Marcar salidas usadas
+    ReDim usada(1 To salidas.Count)
+    
+    Dim filaResultado As Long
+    filaResultado = 2
+
+    ' Emparejar
+    For i = 1 To entradas.Count
+        Dim mejorDiferencia As Double: mejorDiferencia = 1E+20
+        Dim mejorIndex As Long: mejorIndex = -1
+
+        placa = entradas(i)(0)
+        fechaEntrada = entradas(i)(1)
+
+        ' Buscar salida más cercana posterior
+        For j = 1 To salidas.Count
+            If Not usada(j) Then
+                If salidas(j)(0) = placa Then
+                    fechaSalida = salidas(j)(1)
+                    If fechaSalida >= fechaEntrada Then
+                        If fechaSalida - fechaEntrada < mejorDiferencia Then
+                            mejorDiferencia = fechaSalida - fechaEntrada
+                            mejorIndex = j
+                        End If
+                    End If
+                End If
+            End If
+        Next j
+
+        ' Si se encontró una pareja válida
+        If mejorIndex <> -1 Then
+            usada(mejorIndex) = True
+            wsParejas.Cells(filaResultado, 1).Value = placa
+            wsParejas.Cells(filaResultado, 2).Value = fechaEntrada
+            wsParejas.Cells(filaResultado, 3).Value = salidas(mejorIndex)(1)
+            wsParejas.Cells(filaResultado, 4).Value = Round((salidas(mejorIndex)(1) - fechaEntrada) * 1440, 2)
+            filaResultado = filaResultado + 1
+        End If
+    Next i
+
+    MsgBox "Emparejamiento completado. Revisar hoja 'Parejas'."
+
+End Sub
+ 

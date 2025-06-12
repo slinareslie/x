@@ -1,3 +1,36 @@
+' Guardar entradas y salidas como texto
+For i = 2 To ultimaFila
+    placa = wsDatos.Cells(i, "G").Value
+    If wsDatos.Cells(i, "B").Value = "01" Then
+        entradas.Add Array(placa, wsDatos.Range("D" & i).Text) ' Leer como texto visible
+    ElseIf wsDatos.Cells(i, "B").Value = "02" Then
+        salidas.Add Array(placa, wsDatos.Range("H" & i).Text)
+    End If
+Next i
+
+
+With wsParejas
+    .Cells(filaResultado, 1).Value = placa
+    .Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
+    .Cells(filaResultado, 3).Value = salidas(i)(1)
+    
+    ' Calcular diferencia (solo si ambas fechas son válidas)
+    On Error Resume Next
+    Dim fEntrada As Date, fSalida As Date
+    fEntrada = CDate(entradas(mejorIndex)(1))
+    fSalida = CDate(salidas(i)(1))
+    If Err.Number = 0 Then
+        .Cells(filaResultado, 4).Value = Round((fSalida - fEntrada) * 1440, 2)
+    Else
+        .Cells(filaResultado, 4).Value = "Error"
+    End If
+    On Error GoTo 0
+End With
+
+
+
+
+
 wsParejas.Cells(filaResultado, 2).Value = Format(entradas(mejorIndex)(1), "dd/mm/yy hh:mm:ss")
 wsParejas.Cells(filaResultado, 3).Value = Format(fechaSalida, "dd/mm/yy hh:mm:ss")
 

@@ -1,12 +1,7 @@
-Sort(
-    Distinct(
-        AddColumns(
-            [@'DirectorioTransportistaSIGAD'];
-            "Paises";
-            If(Len(PA) = 2; PA; "Otros")
-        );
-        Paises
-    );
-    Result;
-    Ascending
-)
+=MINIFS(Datos!H:H, Datos!B:B, "02", Datos!G:G, G2, Datos!H:H, ">="&D2)
+
+
+=(I2-D2)*24*60   'En minutos
+
+
+=I2-D2   'Formato personalizado para duración

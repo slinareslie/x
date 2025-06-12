@@ -1,4 +1,4 @@
-Sub EmparejarEntradasSalidas()
+Sub EmparejarPorFechaSalida()
 
     Dim wsDatos As Worksheet, wsParejas As Worksheet
     Dim entradas As Collection, salidas As Collection
@@ -39,26 +39,26 @@ Sub EmparejarEntradasSalidas()
         End If
     Next i
 
-    ' Marcar salidas usadas
-    ReDim usada(1 To salidas.Count)
+    ' Marcar entradas usadas
+    ReDim usada(1 To entradas.Count)
     
     Dim filaResultado As Long
     filaResultado = 2
 
-    ' Emparejar
-    For i = 1 To entradas.Count
+    ' Emparejar salidas con entrada anterior más cercana
+    For i = 1 To salidas.Count
         Dim mejorDiferencia As Double: mejorDiferencia = 1E+20
         Dim mejorIndex As Long: mejorIndex = -1
 
-        placa = entradas(i)(0)
-        fechaEntrada = entradas(i)(1)
+        placa = salidas(i)(0)
+        fechaSalida = salidas(i)(1)
 
-        ' Buscar salida más cercana posterior
-        For j = 1 To salidas.Count
+        ' Buscar entrada más reciente antes de la salida
+        For j = 1 To entradas.Count
             If Not usada(j) Then
-                If salidas(j)(0) = placa Then
-                    fechaSalida = salidas(j)(1)
-                    If fechaSalida >= fechaEntrada Then
+                If entradas(j)(0) = placa Then
+                    fechaEntrada = entradas(j)(1)
+                    If fechaEntrada <= fechaSalida Then
                         If fechaSalida - fechaEntrada < mejorDiferencia Then
                             mejorDiferencia = fechaSalida - fechaEntrada
                             mejorIndex = j
@@ -72,9 +72,9 @@ Sub EmparejarEntradasSalidas()
         If mejorIndex <> -1 Then
             usada(mejorIndex) = True
             wsParejas.Cells(filaResultado, 1).Value = placa
-            wsParejas.Cells(filaResultado, 2).Value = fechaEntrada
-            wsParejas.Cells(filaResultado, 3).Value = salidas(mejorIndex)(1)
-            wsParejas.Cells(filaResultado, 4).Value = Round((salidas(mejorIndex)(1) - fechaEntrada) * 1440, 2)
+            wsParejas.Cells(filaResultado, 2).Value = entradas(mejorIndex)(1)
+            wsParejas.Cells(filaResultado, 3).Value = fechaSalida
+            wsParejas.Cells(filaResultado, 4).Value = Round((fechaSalida - entradas(mejorIndex)(1)) * 1440, 2)
             filaResultado = filaResultado + 1
         End If
     Next i

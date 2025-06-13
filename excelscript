@@ -20,18 +20,18 @@ Sub EmparejarSecuencial()
     Set wsParejas = ThisWorkbook.Sheets.Add: wsParejas.Name = "Parejas"
     Set wsSinPareja = ThisWorkbook.Sheets.Add: wsSinPareja.Name = "SinPareja"
 
-    ' Encabezados con punto y coma
-    wsParejas.Range("A1:N1").Value = Array("Placa"; "Día Entrada"; "Mes Entrada"; "Año Entrada"; _
-        "Día Salida"; "Mes Salida"; "Año Salida"; "Diferencia (minutos)"; _
-        "Manif. Entrada A"; "Manif. Entrada G"; "Manif. Entrada J"; _
-        "Manif. Salida A"; "Manif. Salida G"; "Manif. Salida J")
+    ' Encabezados
+    wsParejas.Range("A1:N1").Value = Array("Placa", "Día Entrada", "Mes Entrada", "Año Entrada", _
+        "Día Salida", "Mes Salida", "Año Salida", "Diferencia (minutos)", _
+        "Manif. Entrada A", "Manif. Entrada G", "Manif. Entrada J", _
+        "Manif. Salida A", "Manif. Salida G", "Manif. Salida J")
 
-    wsSinPareja.Range("A1:G1").Value = Array("Placa"; "Tipo"; "Día"; "Mes"; "Año"; "Fecha"; "Motivo")
+    wsSinPareja.Range("A1:J1").Value = Array("Placa", "Tipo", "Día", "Mes", "Año", "Fecha", "Motivo", "Manif. A", "Manif. G", "Manif. J")
 
     ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
     Set dictEventos = CreateObject("Scripting.Dictionary")
 
-    ' Leer datos y agregarlos al diccionario
+    ' Leer datos
     For i = 2 To ultimaFila
         clave = Trim(wsDatos.Cells(i, "I").Value)
         If clave <> "" Then
@@ -61,20 +61,16 @@ Saltar:
     filaResultado = 2
     filaSinPareja = 2
 
-    ' Procesar cada placa
     For Each clave In dictEventos.Keys
         Set eventos = dictEventos(clave)
 
-        ' Convertir colección a array para ordenar
         Dim arr() As Variant
         ReDim arr(1 To eventos.Count)
         For i = 1 To eventos.Count
             arr(i) = eventos(i)
         Next i
 
-        ' Ordenar eventos por fecha
-        Dim j As Long
-        Dim temp As Variant
+        Dim j As Long, temp As Variant
         For i = 1 To UBound(arr) - 1
             For j = i + 1 To UBound(arr)
                 If arr(i)(1) > arr(j)(1) Then
@@ -85,22 +81,26 @@ Saltar:
             Next j
         Next i
 
-        ' Emparejar secuencialmente
         tieneEntrada = False
         For i = 1 To UBound(arr)
             Dim tipo As String, fecha As Date
             tipo = arr(i)(0)
             fecha = arr(i)(1)
 
-            If tipo = "01" Then ' Entrada
+            If tipo = "01" Then
                 If tieneEntrada Then
-                    wsSinPareja.Cells(filaSinPareja, 1).Value = clave
-                    wsSinPareja.Cells(filaSinPareja, 2).Value = "Entrada"
-                    wsSinPareja.Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
-                    wsSinPareja.Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
-                    wsSinPareja.Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
-                    wsSinPareja.Cells(filaSinPareja, 6).Value = entradaPendiente
-                    wsSinPareja.Cells(filaSinPareja, 7).Value = "Entrada sin salida"
+                    With wsSinPareja
+                        .Cells(filaSinPareja, 1).Value = clave
+                        .Cells(filaSinPareja, 2).Value = "Entrada"
+                        .Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
+                        .Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
+                        .Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
+                        .Cells(filaSinPareja, 6).Value = entradaPendiente
+                        .Cells(filaSinPareja, 7).Value = "Entrada sin salida"
+                        .Cells(filaSinPareja, 8).Value = entradaManifA
+                        .Cells(filaSinPareja, 9).Value = entradaManifG
+                        .Cells(filaSinPareja, 10).Value = entradaManifJ
+                    End With
                     filaSinPareja = filaSinPareja + 1
                 End If
                 entradaPendiente = fecha
@@ -109,57 +109,73 @@ Saltar:
                 entradaManifJ = arr(i)(4)
                 tieneEntrada = True
 
-            ElseIf tipo = "02" Then ' Salida
+            ElseIf tipo = "02" Then
                 If tieneEntrada Then
-                    If DateDiff("d", entradaPendiente, fecha) < 3 Then
-                        wsParejas.Cells(filaResultado, 1).Value = clave
-                        wsParejas.Cells(filaResultado, 2).Value = Day(entradaPendiente)
-                        wsParejas.Cells(filaResultado, 3).Value = Month(entradaPendiente)
-                        wsParejas.Cells(filaResultado, 4).Value = Year(entradaPendiente)
-                        wsParejas.Cells(filaResultado, 5).Value = Day(fecha)
-                        wsParejas.Cells(filaResultado, 6).Value = Month(fecha)
-                        wsParejas.Cells(filaResultado, 7).Value = Year(fecha)
-                        wsParejas.Cells(filaResultado, 8).Value = Round((fecha - entradaPendiente) * 1440, 2)
-                        wsParejas.Cells(filaResultado, 9).Value = entradaManifA
-                        wsParejas.Cells(filaResultado, 10).Value = entradaManifG
-                        wsParejas.Cells(filaResultado, 11).Value = entradaManifJ
-                        wsParejas.Cells(filaResultado, 12).Value = arr(i)(2)
-                        wsParejas.Cells(filaResultado, 13).Value = arr(i)(3)
-                        wsParejas.Cells(filaResultado, 14).Value = arr(i)(4)
+                    If DateDiff("d", entradaPendiente, fecha) <= 3 Then
+                        With wsParejas
+                            .Cells(filaResultado, 1).Value = clave
+                            .Cells(filaResultado, 2).Value = Day(entradaPendiente)
+                            .Cells(filaResultado, 3).Value = Month(entradaPendiente)
+                            .Cells(filaResultado, 4).Value = Year(entradaPendiente)
+                            .Cells(filaResultado, 5).Value = Day(fecha)
+                            .Cells(filaResultado, 6).Value = Month(fecha)
+                            .Cells(filaResultado, 7).Value = Year(fecha)
+                            .Cells(filaResultado, 8).Value = Round((fecha - entradaPendiente) * 1440, 2)
+                            .Cells(filaResultado, 9).Value = entradaManifA
+                            .Cells(filaResultado, 10).Value = entradaManifG
+                            .Cells(filaResultado, 11).Value = entradaManifJ
+                            .Cells(filaResultado, 12).Value = arr(i)(2)
+                            .Cells(filaResultado, 13).Value = arr(i)(3)
+                            .Cells(filaResultado, 14).Value = arr(i)(4)
+                        End With
                         filaResultado = filaResultado + 1
                     Else
-                        wsSinPareja.Cells(filaSinPareja, 1).Value = clave
-                        wsSinPareja.Cells(filaSinPareja, 2).Value = "Salida"
-                        wsSinPareja.Cells(filaSinPareja, 3).Value = Day(fecha)
-                        wsSinPareja.Cells(filaSinPareja, 4).Value = Month(fecha)
-                        wsSinPareja.Cells(filaSinPareja, 5).Value = Year(fecha)
-                        wsSinPareja.Cells(filaSinPareja, 6).Value = fecha
-                        wsSinPareja.Cells(filaSinPareja, 7).Value = "Salida sin entrada (más de 3 días)"
+                        With wsSinPareja
+                            .Cells(filaSinPareja, 1).Value = clave
+                            .Cells(filaSinPareja, 2).Value = "Salida"
+                            .Cells(filaSinPareja, 3).Value = Day(fecha)
+                            .Cells(filaSinPareja, 4).Value = Month(fecha)
+                            .Cells(filaSinPareja, 5).Value = Year(fecha)
+                            .Cells(filaSinPareja, 6).Value = fecha
+                            .Cells(filaSinPareja, 7).Value = "Salida sin entrada (más de 3 días)"
+                            .Cells(filaSinPareja, 8).Value = arr(i)(2)
+                            .Cells(filaSinPareja, 9).Value = arr(i)(3)
+                            .Cells(filaSinPareja, 10).Value = arr(i)(4)
+                        End With
                         filaSinPareja = filaSinPareja + 1
                     End If
                     tieneEntrada = False
                 Else
-                    wsSinPareja.Cells(filaSinPareja, 1).Value = clave
-                    wsSinPareja.Cells(filaSinPareja, 2).Value = "Salida"
-                    wsSinPareja.Cells(filaSinPareja, 3).Value = Day(fecha)
-                    wsSinPareja.Cells(filaSinPareja, 4).Value = Month(fecha)
-                    wsSinPareja.Cells(filaSinPareja, 5).Value = Year(fecha)
-                    wsSinPareja.Cells(filaSinPareja, 6).Value = fecha
-                    wsSinPareja.Cells(filaSinPareja, 7).Value = "Salida sin entrada"
+                    With wsSinPareja
+                        .Cells(filaSinPareja, 1).Value = clave
+                        .Cells(filaSinPareja, 2).Value = "Salida"
+                        .Cells(filaSinPareja, 3).Value = Day(fecha)
+                        .Cells(filaSinPareja, 4).Value = Month(fecha)
+                        .Cells(filaSinPareja, 5).Value = Year(fecha)
+                        .Cells(filaSinPareja, 6).Value = fecha
+                        .Cells(filaSinPareja, 7).Value = "Salida sin entrada"
+                        .Cells(filaSinPareja, 8).Value = arr(i)(2)
+                        .Cells(filaSinPareja, 9).Value = arr(i)(3)
+                        .Cells(filaSinPareja, 10).Value = arr(i)(4)
+                    End With
                     filaSinPareja = filaSinPareja + 1
                 End If
             End If
         Next i
 
-        ' Entrada final sin salida
         If tieneEntrada Then
-            wsSinPareja.Cells(filaSinPareja, 1).Value = clave
-            wsSinPareja.Cells(filaSinPareja, 2).Value = "Entrada"
-            wsSinPareja.Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
-            wsSinPareja.Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
-            wsSinPareja.Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
-            wsSinPareja.Cells(filaSinPareja, 6).Value = entradaPendiente
-            wsSinPareja.Cells(filaSinPareja, 7).Value = "Entrada sin salida final"
+            With wsSinPareja
+                .Cells(filaSinPareja, 1).Value = clave
+                .Cells(filaSinPareja, 2).Value = "Entrada"
+                .Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
+                .Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
+                .Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
+                .Cells(filaSinPareja, 6).Value = entradaPendiente
+                .Cells(filaSinPareja, 7).Value = "Entrada sin salida final"
+                .Cells(filaSinPareja, 8).Value = entradaManifA
+                .Cells(filaSinPareja, 9).Value = entradaManifG
+                .Cells(filaSinPareja, 10).Value = entradaManifJ
+            End With
             filaSinPareja = filaSinPareja + 1
         End If
     Next clave

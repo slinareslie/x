@@ -1,145 +1,46 @@
-Sub EmparejarSecuencial()
+Private Sub Worksheet_Activate()
+    With Me.ComboBox1
+        .Clear
+        .AddItem "Num Correlativo"            ' Columna 1
+        .AddItem "Num Expediente"             ' Columna 2
+        .AddItem "Tipo de Documento"          ' Columna 3
+        .AddItem "N° Documento Acumulador"    ' Columna 4
+        .AddItem "Nombre"                     ' Columna 5
+        .AddItem "COD/RUC"                    ' Columna 6
+        .ListIndex = 0                        ' Selecciona por defecto el primero
+    End With
+End Sub
 
-    Dim wsDatos As Worksheet, wsParejas As Worksheet, wsSinPareja As Worksheet
-    Dim ultimaFila As Long, i As Long, filaResultado As Long, filaSinPareja As Long
-    Dim dictEventos As Object, eventos As Variant
-    Dim clave As Variant
-    Dim entradaPendiente As Date, tieneEntrada As Boolean
+Private Sub TextBox1_Change()
+    Dim filtro As String
+    Dim columna As Integer
 
-    Set wsDatos = ThisWorkbook.Sheets("Datos")
+    Select Case Me.ComboBox1.Value
+        Case "Num Correlativo": columna = 1
+        Case "Num Expediente": columna = 2
+        Case "Tipo de Documento": columna = 3
+        Case "N° Documento Acumulador": columna = 4
+        Case "Nombre": columna = 5
+        Case "COD/RUC": columna = 6
+        Case Else: columna = 1
+    End Select
 
-    ' Eliminar hojas anteriores si existen
+    filtro = "*" & Me.TextBox1.Text & "*"
+
+    ' Aplicar filtro
     On Error Resume Next
-    Application.DisplayAlerts = False
-    ThisWorkbook.Sheets("Parejas").Delete
-    ThisWorkbook.Sheets("SinPareja").Delete
-    Application.DisplayAlerts = True
+    Me.Range("A6").CurrentRegion.AutoFilter Field:=columna, Criteria1:=filtro
+    On Error GoTo 0
+End Sub
+
+Private Sub ComboBox1_Change()
+    ' Limpiar filtros existentes
+    On Error Resume Next
+    If Me.AutoFilterMode Then
+        If Me.FilterMode Then Me.ShowAllData
+    End If
     On Error GoTo 0
 
-    Set wsParejas = ThisWorkbook.Sheets.Add: wsParejas.Name = "Parejas"
-    Set wsSinPareja = ThisWorkbook.Sheets.Add: wsSinPareja.Name = "SinPareja"
-
-    wsParejas.Range("A1:H1").Value = Array("Placa", "Día Entrada", "Mes Entrada", "Año Entrada", "Día Salida", "Mes Salida", "Año Salida", "Diferencia (minutos)")
-    wsSinPareja.Range("A1:G1").Value = Array("Placa", "Tipo", "Día", "Mes", "Año", "Fecha", "Motivo")
-
-    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
-    Set dictEventos = CreateObject("Scripting.Dictionary")
-
-    ' Leer datos y agregarlos al diccionario
-    For i = 2 To ultimaFila
-        clave = Trim(wsDatos.Cells(i, "I").Value)
-        If clave <> "" Then
-            If Not dictEventos.exists(clave) Then
-                dictEventos.Add clave, New Collection
-            End If
-
-            Dim tipoEvento As String, fechaEvento As Variant
-            tipoEvento = wsDatos.Cells(i, "B").Value
-
-            If tipoEvento = "01" Then
-                fechaEvento = wsDatos.Cells(i, "D").Value
-            ElseIf tipoEvento = "02" Then
-                fechaEvento = wsDatos.Cells(i, "H").Value
-            Else
-                GoTo Saltar
-            End If
-
-            If IsDate(fechaEvento) Then
-                dictEventos(clave).Add Array(tipoEvento, CDate(fechaEvento))
-            End If
-        End If
-Saltar:
-    Next i
-
-    filaResultado = 2
-    filaSinPareja = 2
-
-    ' Procesar cada placa
-    For Each clave In dictEventos.Keys
-        Set eventos = dictEventos(clave)
-
-        ' Convertir colección a array para ordenar
-        Dim arr() As Variant
-        ReDim arr(1 To eventos.Count)
-        For i = 1 To eventos.Count
-            arr(i) = eventos(i)
-        Next i
-
-        ' Ordenar eventos por fecha
-        Dim j As Long
-        Dim temp As Variant
-        For i = 1 To UBound(arr) - 1
-            For j = i + 1 To UBound(arr)
-                If arr(i)(1) > arr(j)(1) Then
-                    temp = arr(i)
-                    arr(i) = arr(j)
-                    arr(j) = temp
-                End If
-            Next j
-        Next i
-
-        ' Emparejar secuencialmente
-        tieneEntrada = False
-        For i = 1 To UBound(arr)
-            Dim tipo As String, fecha As Date
-            tipo = arr(i)(0)
-            fecha = arr(i)(1)
-
-            If tipo = "01" Then ' Entrada
-                If tieneEntrada Then
-                    ' Ya había una entrada pendiente sin salida
-                    wsSinPareja.Cells(filaSinPareja, 1).Value = clave
-                    wsSinPareja.Cells(filaSinPareja, 2).Value = "Entrada"
-                    wsSinPareja.Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
-                    wsSinPareja.Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
-                    wsSinPareja.Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
-                    wsSinPareja.Cells(filaSinPareja, 6).Value = entradaPendiente
-                    wsSinPareja.Cells(filaSinPareja, 7).Value = "Entrada sin salida"
-                    filaSinPareja = filaSinPareja + 1
-                End If
-                entradaPendiente = fecha
-                tieneEntrada = True
-
-            ElseIf tipo = "02" Then ' Salida
-                If tieneEntrada Then
-                    ' Emparejar
-                    wsParejas.Cells(filaResultado, 1).Value = clave
-                    wsParejas.Cells(filaResultado, 2).Value = Day(entradaPendiente)
-                    wsParejas.Cells(filaResultado, 3).Value = Month(entradaPendiente)
-                    wsParejas.Cells(filaResultado, 4).Value = Year(entradaPendiente)
-                    wsParejas.Cells(filaResultado, 5).Value = Day(fecha)
-                    wsParejas.Cells(filaResultado, 6).Value = Month(fecha)
-                    wsParejas.Cells(filaResultado, 7).Value = Year(fecha)
-                    wsParejas.Cells(filaResultado, 8).Value = Round((fecha - entradaPendiente) * 1440, 2)
-                    filaResultado = filaResultado + 1
-                    tieneEntrada = False
-                Else
-                    ' Salida sin entrada
-                    wsSinPareja.Cells(filaSinPareja, 1).Value = clave
-                    wsSinPareja.Cells(filaSinPareja, 2).Value = "Salida"
-                    wsSinPareja.Cells(filaSinPareja, 3).Value = Day(fecha)
-                    wsSinPareja.Cells(filaSinPareja, 4).Value = Month(fecha)
-                    wsSinPareja.Cells(filaSinPareja, 5).Value = Year(fecha)
-                    wsSinPareja.Cells(filaSinPareja, 6).Value = fecha
-                    wsSinPareja.Cells(filaSinPareja, 7).Value = "Salida sin entrada"
-                    filaSinPareja = filaSinPareja + 1
-                End If
-            End If
-        Next i
-
-        ' Entrada final sin salida
-        If tieneEntrada Then
-            wsSinPareja.Cells(filaSinPareja, 1).Value = clave
-            wsSinPareja.Cells(filaSinPareja, 2).Value = "Entrada"
-            wsSinPareja.Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
-            wsSinPareja.Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
-            wsSinPareja.Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
-            wsSinPareja.Cells(filaSinPareja, 6).Value = entradaPendiente
-            wsSinPareja.Cells(filaSinPareja, 7).Value = "Entrada sin salida final"
-            filaSinPareja = filaSinPareja + 1
-        End If
-    Next clave
-
-    MsgBox "Emparejamiento completado correctamente. Revisa las hojas 'Parejas' y 'SinPareja'."
-
+    ' Limpiar el TextBox de búsqueda (opcional)
+    Me.TextBox1.Text = ""
 End Sub

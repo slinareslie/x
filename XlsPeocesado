@@ -3,11 +3,15 @@ Private Sub TextBox1_Change()
     Dim columna As Integer
     Dim celda As Range
     Dim rngDatos As Range
-    Dim fila As Range
     Dim textoCelda As String
     Dim textoFiltro As String
+    Dim ultimaFila As Long
+    Dim i As Long
 
-    ' Determinar la columna según ComboBox
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+
+    ' Determinar columna según ComboBox
     Select Case Me.ComboBox1.Value
         Case "Num Correlativo": columna = 1
         Case "Num Expediente": columna = 2
@@ -18,34 +22,29 @@ Private Sub TextBox1_Change()
         Case Else: columna = 1
     End Select
 
-    ' Normalizar el criterio ingresado
+    ' Normalizar texto ingresado
     criterio = NormalizarTexto(Me.TextBox1.Text)
 
-    ' Mostrar todas las filas antes de aplicar el filtro
-    Me.Rows.Hidden = False
+    ' Obtener última fila con datos en esa columna
+    ultimaFila = Me.Cells(Me.Rows.Count, columna).End(xlUp).Row
 
-    ' Rango de datos (sin encabezado)
-    Set rngDatos = Me.Range("A7", Me.Cells(Me.Rows.Count, "A").End(xlUp)).EntireRow
+    ' Mostrar todo si no hay texto
+    If criterio = "" Then
+        Me.Rows.Hidden = False
+        GoTo Salir
+    End If
 
-    Application.ScreenUpdating = False
-    For Each fila In rngDatos
-        textoCelda = NormalizarTexto(fila.Cells(1, columna).Text)
-        If criterio <> "" Then
-            If InStr(1, textoCelda, criterio, vbTextCompare) = 0 Then
-                fila.EntireRow.Hidden = True
-            End If
+    ' Recorremos solo desde la fila 7 (asumiendo encabezado en 6)
+    For i = 7 To ultimaFila
+        textoCelda = NormalizarTexto(Me.Cells(i, columna).Text)
+        If InStr(1, textoCelda, criterio, vbTextCompare) = 0 Then
+            Me.Rows(i).Hidden = True
+        Else
+            Me.Rows(i).Hidden = False
         End If
-    Next fila
+    Next i
+
+Salir:
+    Application.EnableEvents = True
     Application.ScreenUpdating = True
 End Sub
-Function NormalizarTexto(ByVal texto As String) As String
-    Dim acentos, sinAcentos, i As Integer
-    acentos = "ÁÉÍÓÚÜÑáéíóúüñ"
-    sinAcentos = "AEIOUUNaeiouun"
-
-    texto = LCase(texto)
-    For i = 1 To Len(acentos)
-        texto = Replace(texto, Mid(acentos, i, 1), Mid(sinAcentos, i, 1))
-    Next i
-    NormalizarTexto = texto
-End Function

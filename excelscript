@@ -1,185 +1,35 @@
-Sub EmparejarSecuencial()
+Private Sub Worksheet_Activate()
+    With Me.ComboBox1
+        .Clear
+        .AddItem "Num Correlativo"            ' Columna 1
+        .AddItem "Num Expediente"             ' Columna 2
+        .AddItem "Tipo de Documento"          ' Columna 3
+        .AddItem "N° Documento Acumulador"    ' Columna 4
+        .AddItem "Nombre"                     ' Columna 5
+        .AddItem "COD/RUC"                    ' Columna 6
+        .ListIndex = 0                        ' Selecciona por defecto el primero
+    End With
+End Sub
 
-    Dim wsDatos As Worksheet, wsParejas As Worksheet, wsSinPareja As Worksheet
-    Dim ultimaFila As Long, i As Long, filaResultado As Long, filaSinPareja As Long
-    Dim dictEventos As Object, eventos As Variant
-    Dim clave As Variant
-    Dim entradaPendiente As Date, tieneEntrada As Boolean
-    Dim entradaManifA As Variant, entradaManifG As Variant, entradaManifJ As Variant
+Private Sub TextBox1_Change()
+    Dim filtro As String
+    Dim columna As Integer
 
-    Set wsDatos = ThisWorkbook.Sheets("Datos")
+    ' Obtener el número de columna basado en la selección del ComboBox
+    Select Case Me.ComboBox1.Value
+        Case "Num Correlativo": columna = 1
+        Case "Num Expediente": columna = 2
+        Case "Tipo de Documento": columna = 3
+        Case "N° Documento Acumulador": columna = 4
+        Case "Nombre": columna = 5
+        Case "COD/RUC": columna = 6
+        Case Else: columna = 1 ' Por defecto, columna 1
+    End Select
 
-    ' Eliminar hojas anteriores si existen
+    filtro = "*" & Me.TextBox1.Text & "*"
+
+    ' Aplicar filtro
     On Error Resume Next
-    Application.DisplayAlerts = False
-    ThisWorkbook.Sheets("Parejas").Delete
-    ThisWorkbook.Sheets("SinPareja").Delete
-    Application.DisplayAlerts = True
+    Me.Range("A6").CurrentRegion.AutoFilter Field:=columna, Criteria1:=filtro
     On Error GoTo 0
-
-    Set wsParejas = ThisWorkbook.Sheets.Add: wsParejas.Name = "Parejas"
-    Set wsSinPareja = ThisWorkbook.Sheets.Add: wsSinPareja.Name = "SinPareja"
-
-    ' Encabezados
-    wsParejas.Range("A1:N1").Value = Array("Placa", "Día Entrada", "Mes Entrada", "Año Entrada", _
-        "Día Salida", "Mes Salida", "Año Salida", "Diferencia (minutos)", _
-        "Manif. Entrada A", "Manif. Entrada G", "Manif. Entrada J", _
-        "Manif. Salida A", "Manif. Salida G", "Manif. Salida J")
-
-    wsSinPareja.Range("A1:J1").Value = Array("Placa", "Tipo", "Día", "Mes", "Año", "Fecha", "Motivo", "Manif. A", "Manif. G", "Manif. J")
-
-    ultimaFila = wsDatos.Cells(wsDatos.Rows.Count, "B").End(xlUp).Row
-    Set dictEventos = CreateObject("Scripting.Dictionary")
-
-    ' Leer datos
-    For i = 2 To ultimaFila
-        clave = Trim(wsDatos.Cells(i, "I").Value)
-        If clave <> "" Then
-            If Not dictEventos.exists(clave) Then
-                dictEventos.Add clave, New Collection
-            End If
-
-            Dim tipoEvento As String, fechaEvento As Variant
-            tipoEvento = wsDatos.Cells(i, "B").Value
-
-            If tipoEvento = "01" Then
-                fechaEvento = wsDatos.Cells(i, "D").Value
-            ElseIf tipoEvento = "02" Then
-                fechaEvento = wsDatos.Cells(i, "H").Value
-            Else
-                GoTo Saltar
-            End If
-
-            If IsDate(fechaEvento) Then
-                dictEventos(clave).Add Array(tipoEvento, CDate(fechaEvento), _
-                    wsDatos.Cells(i, "A").Value, wsDatos.Cells(i, "G").Value, wsDatos.Cells(i, "J").Value)
-            End If
-        End If
-Saltar:
-    Next i
-
-    filaResultado = 2
-    filaSinPareja = 2
-
-    For Each clave In dictEventos.Keys
-        Set eventos = dictEventos(clave)
-
-        Dim arr() As Variant
-        ReDim arr(1 To eventos.Count)
-        For i = 1 To eventos.Count
-            arr(i) = eventos(i)
-        Next i
-
-        Dim j As Long, temp As Variant
-        For i = 1 To UBound(arr) - 1
-            For j = i + 1 To UBound(arr)
-                If arr(i)(1) > arr(j)(1) Then
-                    temp = arr(i)
-                    arr(i) = arr(j)
-                    arr(j) = temp
-                End If
-            Next j
-        Next i
-
-        tieneEntrada = False
-        For i = 1 To UBound(arr)
-            Dim tipo As String, fecha As Date
-            tipo = arr(i)(0)
-            fecha = arr(i)(1)
-
-            If tipo = "01" Then
-                If tieneEntrada Then
-                    With wsSinPareja
-                        .Cells(filaSinPareja, 1).Value = clave
-                        .Cells(filaSinPareja, 2).Value = "Entrada"
-                        .Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
-                        .Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
-                        .Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
-                        .Cells(filaSinPareja, 6).Value = entradaPendiente
-                        .Cells(filaSinPareja, 7).Value = "Entrada sin salida"
-                        .Cells(filaSinPareja, 8).Value = entradaManifA
-                        .Cells(filaSinPareja, 9).Value = entradaManifG
-                        .Cells(filaSinPareja, 10).Value = entradaManifJ
-                    End With
-                    filaSinPareja = filaSinPareja + 1
-                End If
-                entradaPendiente = fecha
-                entradaManifA = arr(i)(2)
-                entradaManifG = arr(i)(3)
-                entradaManifJ = arr(i)(4)
-                tieneEntrada = True
-
-            ElseIf tipo = "02" Then
-                If tieneEntrada Then
-                    If DateDiff("d", entradaPendiente, fecha) <= 3 Then
-                        With wsParejas
-                            .Cells(filaResultado, 1).Value = clave
-                            .Cells(filaResultado, 2).Value = Day(entradaPendiente)
-                            .Cells(filaResultado, 3).Value = Month(entradaPendiente)
-                            .Cells(filaResultado, 4).Value = Year(entradaPendiente)
-                            .Cells(filaResultado, 5).Value = Day(fecha)
-                            .Cells(filaResultado, 6).Value = Month(fecha)
-                            .Cells(filaResultado, 7).Value = Year(fecha)
-                            .Cells(filaResultado, 8).Value = Round((fecha - entradaPendiente) * 1440, 2)
-                            .Cells(filaResultado, 9).Value = entradaManifA
-                            .Cells(filaResultado, 10).Value = entradaManifG
-                            .Cells(filaResultado, 11).Value = entradaManifJ
-                            .Cells(filaResultado, 12).Value = arr(i)(2)
-                            .Cells(filaResultado, 13).Value = arr(i)(3)
-                            .Cells(filaResultado, 14).Value = arr(i)(4)
-                        End With
-                        filaResultado = filaResultado + 1
-                    Else
-                        With wsSinPareja
-                            .Cells(filaSinPareja, 1).Value = clave
-                            .Cells(filaSinPareja, 2).Value = "Salida"
-                            .Cells(filaSinPareja, 3).Value = Day(fecha)
-                            .Cells(filaSinPareja, 4).Value = Month(fecha)
-                            .Cells(filaSinPareja, 5).Value = Year(fecha)
-                            .Cells(filaSinPareja, 6).Value = fecha
-                            .Cells(filaSinPareja, 7).Value = "Salida sin entrada (más de 3 días)"
-                            .Cells(filaSinPareja, 8).Value = arr(i)(2)
-                            .Cells(filaSinPareja, 9).Value = arr(i)(3)
-                            .Cells(filaSinPareja, 10).Value = arr(i)(4)
-                        End With
-                        filaSinPareja = filaSinPareja + 1
-                    End If
-                    tieneEntrada = False
-                Else
-                    With wsSinPareja
-                        .Cells(filaSinPareja, 1).Value = clave
-                        .Cells(filaSinPareja, 2).Value = "Salida"
-                        .Cells(filaSinPareja, 3).Value = Day(fecha)
-                        .Cells(filaSinPareja, 4).Value = Month(fecha)
-                        .Cells(filaSinPareja, 5).Value = Year(fecha)
-                        .Cells(filaSinPareja, 6).Value = fecha
-                        .Cells(filaSinPareja, 7).Value = "Salida sin entrada"
-                        .Cells(filaSinPareja, 8).Value = arr(i)(2)
-                        .Cells(filaSinPareja, 9).Value = arr(i)(3)
-                        .Cells(filaSinPareja, 10).Value = arr(i)(4)
-                    End With
-                    filaSinPareja = filaSinPareja + 1
-                End If
-            End If
-        Next i
-
-        If tieneEntrada Then
-            With wsSinPareja
-                .Cells(filaSinPareja, 1).Value = clave
-                .Cells(filaSinPareja, 2).Value = "Entrada"
-                .Cells(filaSinPareja, 3).Value = Day(entradaPendiente)
-                .Cells(filaSinPareja, 4).Value = Month(entradaPendiente)
-                .Cells(filaSinPareja, 5).Value = Year(entradaPendiente)
-                .Cells(filaSinPareja, 6).Value = entradaPendiente
-                .Cells(filaSinPareja, 7).Value = "Entrada sin salida final"
-                .Cells(filaSinPareja, 8).Value = entradaManifA
-                .Cells(filaSinPareja, 9).Value = entradaManifG
-                .Cells(filaSinPareja, 10).Value = entradaManifJ
-            End With
-            filaSinPareja = filaSinPareja + 1
-        End If
-    Next clave
-
-    MsgBox "Emparejamiento completado correctamente. Revisa las hojas 'Parejas' y 'SinPareja'."
-
 End Sub

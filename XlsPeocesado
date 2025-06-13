@@ -14,7 +14,16 @@ End Sub
 Private Sub TextBox1_Change()
     Dim filtro As String
     Dim columna As Integer
+    Dim rg As Range
 
+    Set rg = Me.Range("A6").CurrentRegion
+
+    ' Quitar cualquier filtro anterior antes de aplicar uno nuevo
+    On Error Resume Next
+    If Me.FilterMode Then Me.ShowAllData
+    On Error GoTo 0
+
+    ' Obtener columna según ComboBox
     Select Case Me.ComboBox1.Value
         Case "Num Correlativo": columna = 1
         Case "Num Expediente": columna = 2
@@ -27,20 +36,18 @@ Private Sub TextBox1_Change()
 
     filtro = "*" & Me.TextBox1.Text & "*"
 
-    ' Aplicar filtro
-    On Error Resume Next
-    Me.Range("A6").CurrentRegion.AutoFilter Field:=columna, Criteria1:=filtro
-    On Error GoTo 0
+    ' Si hay texto, aplicar filtro
+    If Me.TextBox1.Text <> "" Then
+        rg.AutoFilter Field:=columna, Criteria1:=filtro
+    End If
 End Sub
 
 Private Sub ComboBox1_Change()
-    ' Limpiar filtros existentes
+    ' Quitar cualquier filtro anterior
     On Error Resume Next
-    If Me.AutoFilterMode Then
-        If Me.FilterMode Then Me.ShowAllData
-    End If
+    If Me.FilterMode Then Me.ShowAllData
     On Error GoTo 0
 
-    ' Limpiar el TextBox de búsqueda (opcional)
+    ' Limpiar el TextBox
     Me.TextBox1.Text = ""
 End Sub

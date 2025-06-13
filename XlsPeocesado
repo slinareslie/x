@@ -1,29 +1,13 @@
-Private Sub Worksheet_Activate()
-    With Me.ComboBox1
-        .Clear
-        .AddItem "Num Correlativo"            ' Columna 1
-        .AddItem "Num Expediente"             ' Columna 2
-        .AddItem "Tipo de Documento"          ' Columna 3
-        .AddItem "N° Documento Acumulador"    ' Columna 4
-        .AddItem "Nombre"                     ' Columna 5
-        .AddItem "COD/RUC"                    ' Columna 6
-        .ListIndex = 0                        ' Selecciona por defecto el primero
-    End With
-End Sub
-
 Private Sub TextBox1_Change()
-    Dim filtro As String
+    Dim criterio As String
     Dim columna As Integer
-    Dim rg As Range
+    Dim celda As Range
+    Dim rngDatos As Range
+    Dim fila As Range
+    Dim textoCelda As String
+    Dim textoFiltro As String
 
-    Set rg = Me.Range("A6").CurrentRegion
-
-    ' Quitar cualquier filtro anterior antes de aplicar uno nuevo
-    On Error Resume Next
-    If Me.FilterMode Then Me.ShowAllData
-    On Error GoTo 0
-
-    ' Obtener columna según ComboBox
+    ' Determinar la columna según ComboBox
     Select Case Me.ComboBox1.Value
         Case "Num Correlativo": columna = 1
         Case "Num Expediente": columna = 2
@@ -34,20 +18,34 @@ Private Sub TextBox1_Change()
         Case Else: columna = 1
     End Select
 
-    filtro = "*" & Me.TextBox1.Text & "*"
+    ' Normalizar el criterio ingresado
+    criterio = NormalizarTexto(Me.TextBox1.Text)
 
-    ' Si hay texto, aplicar filtro
-    If Me.TextBox1.Text <> "" Then
-        rg.AutoFilter Field:=columna, Criteria1:=filtro
-    End If
+    ' Mostrar todas las filas antes de aplicar el filtro
+    Me.Rows.Hidden = False
+
+    ' Rango de datos (sin encabezado)
+    Set rngDatos = Me.Range("A7", Me.Cells(Me.Rows.Count, "A").End(xlUp)).EntireRow
+
+    Application.ScreenUpdating = False
+    For Each fila In rngDatos
+        textoCelda = NormalizarTexto(fila.Cells(1, columna).Text)
+        If criterio <> "" Then
+            If InStr(1, textoCelda, criterio, vbTextCompare) = 0 Then
+                fila.EntireRow.Hidden = True
+            End If
+        End If
+    Next fila
+    Application.ScreenUpdating = True
 End Sub
+Function NormalizarTexto(ByVal texto As String) As String
+    Dim acentos, sinAcentos, i As Integer
+    acentos = "ÁÉÍÓÚÜÑáéíóúüñ"
+    sinAcentos = "AEIOUUNaeiouun"
 
-Private Sub ComboBox1_Change()
-    ' Quitar cualquier filtro anterior
-    On Error Resume Next
-    If Me.FilterMode Then Me.ShowAllData
-    On Error GoTo 0
-
-    ' Limpiar el TextBox
-    Me.TextBox1.Text = ""
-End Sub
+    texto = LCase(texto)
+    For i = 1 To Len(acentos)
+        texto = Replace(texto, Mid(acentos, i, 1), Mid(sinAcentos, i, 1))
+    Next i
+    NormalizarTexto = texto
+End Function

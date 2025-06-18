@@ -1,35 +1,13 @@
-Private Sub Worksheet_Activate()
-    With Me.ComboBox1
-        .Clear
-        .AddItem "Num Correlativo"            ' Columna 1
-        .AddItem "Num Expediente"             ' Columna 2
-        .AddItem "Tipo de Documento"          ' Columna 3
-        .AddItem "N° Documento Acumulador"    ' Columna 4
-        .AddItem "Nombre"                     ' Columna 5
-        .AddItem "COD/RUC"                    ' Columna 6
-        .ListIndex = 0                        ' Selecciona por defecto el primero
-    End With
-End Sub
-
-Private Sub TextBox1_Change()
-    Dim filtro As String
-    Dim columna As Integer
-
-    ' Obtener el número de columna basado en la selección del ComboBox
-    Select Case Me.ComboBox1.Value
-        Case "Num Correlativo": columna = 1
-        Case "Num Expediente": columna = 2
-        Case "Tipo de Documento": columna = 3
-        Case "N° Documento Acumulador": columna = 4
-        Case "Nombre": columna = 5
-        Case "COD/RUC": columna = 6
-        Case Else: columna = 1 ' Por defecto, columna 1
-    End Select
-
-    filtro = "*" & Me.TextBox1.Text & "*"
-
-    ' Aplicar filtro
-    On Error Resume Next
-    Me.Range("A6").CurrentRegion.AutoFilter Field:=columna, Criteria1:=filtro
-    On Error GoTo 0
-End Sub
+$cellValue = $data[$row][$col]
+if ($col -eq 7 -or $col -eq 8) {
+    # Columnas H (8) e I (9) son fechas -> índices 7 y 8 (cero-indexado)
+    try {
+        $worksheet.Cells.Item($row + 4, $col + 1).Value2 = [datetime]$cellValue
+    } catch {
+        $worksheet.Cells.Item($row + 4, $col + 1).Value2 = $cellValue  # fallback
+    }
+} elseif ($col -eq 11 -or $col -eq 12) {
+    $worksheet.Cells.Item($row + 4, $col + 1).Value2 = [double]$cellValue
+} else {
+    $worksheet.Cells.Item($row + 4, $col + 1).Value2 = [string]$cellValue
+}

@@ -1,3 +1,11 @@
+# Para que lo trate como texto sin cambiar el tipo:
+$worksheet.Range("H4", $worksheet.Cells.Item($data.Length + 3, 8)).NumberFormat = "@"
+
+$worksheet.Range("H4", $worksheet.Cells.Item($data.Length + 3, 8)).NumberFormat = "dd/mm/yyyy hh:mm:ss"
+$worksheet.Range("I4", $worksheet.Cells.Item($data.Length + 3, 9)).NumberFormat = "dd/mm/yyyy hh:mm:ss"
+
+
+
 $cellValue = $data[$row][$col]
 if ($col -eq 7 -or $col -eq 8) {
     # Columnas H (8) e I (9) son fechas -> índices 7 y 8 (cero-indexado)

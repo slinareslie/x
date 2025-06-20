@@ -2,12 +2,14 @@ Private Sub TextBox1_Change()
     Dim filtro As String
     Dim columna As Integer
     Dim rg As Range
-
-    Set rg = Me.Range("A6").CurrentRegion
+    Dim ws As Worksheet
+    
+    Set ws = Worksheets("Registros")
+    Set rg = ws.Range("A6").CurrentRegion
 
     ' Quitar cualquier filtro anterior antes de aplicar uno nuevo
     On Error Resume Next
-    If Me.FilterMode Then Me.ShowAllData
+    If ws.FilterMode Then ws.ShowAllData
     On Error GoTo 0
 
     ' Obtener columna según ComboBox
@@ -27,7 +29,7 @@ Private Sub TextBox1_Change()
     Else
         ' Si el textbox está vacío, quitar filtros
         On Error Resume Next
-        If Me.FilterMode Then Me.ShowAllData
+        If ws.FilterMode Then ws.ShowAllData
         On Error GoTo 0
     End If
 End Sub

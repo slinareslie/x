@@ -1,37 +1,21 @@
-https://1drv.ms/f/c/382bae9df2c5aacc/En_05KHmpBRCgcxUFAyw92YBt8j0H0G6-43HRwkdpr3dtw?e=eQWckX
+Quiero crear una automatización que se active cada vez que se envíe una respuesta a un formulario de Microsoft Forms llamado "Registro de Tareas".
 
-Private Sub TextBox1_Change()
-    Dim filtro As String
-    Dim columna As Integer
-    Dim rg As Range
-    Dim ws As Worksheet
-    
-    Set ws = Worksheets("Registros")
-    Set rg = ws.Range("A6").CurrentRegion
+El formulario tiene múltiples pares de preguntas. Cada par representa una actividad: una pregunta sobre el "tiempo invertido" y otra sobre el "detalle" de la tarea. Estas preguntas están agrupadas por tipo:
 
-    ' Quitar cualquier filtro anterior antes de aplicar uno nuevo
-    On Error Resume Next
-    If ws.FilterMode Then ws.ShowAllData
-    On Error GoTo 0
+- Tipo A: 6 pares (12 preguntas)
+- Tipo B: 8 pares (16 preguntas)
+- Tipo C: 10 pares (20 preguntas)
+- Tipo D: 6 pares (12 preguntas)
+- Tipo E: 4 pares (8 preguntas)
+- Tipo F: 2 pares (4 preguntas)
 
-    ' Obtener columna según ComboBox
-    Select Case Me.ComboBox1.Value
-        Case "Num Expediente": columna = 2
-        Case "Tipo de Documento": columna = 3
-        Case "N° Documento Acumulador": columna = 4
-        Case "Nombre": columna = 7
-        Case "COD/RUC": columna = 8
-        Case Else: columna = 1
-    End Select
+La automatización debe revisar cada par de preguntas y, **solo si hay contenido en alguno de los dos campos** del par (tiempo o detalle), debe **crear un registro en una lista de SharePoint** llamada **"Tareas Realizadas"** con las siguientes columnas:
 
-    filtro = "*" & Me.TextBox1.Text & "*"
+- `Tipo`: A, B, C, D, E o F (según el grupo de la pregunta)
+- `Especificación`: "Tarea A1", "Tarea B4", etc., según el número de la tarea dentro del grupo
+- `TiempoInvertido`: respuesta del campo de tiempo correspondiente
+- `Detalle`: respuesta del campo de detalle correspondiente
 
-    If Me.TextBox1.Text <> "" Then
-        rg.AutoFilter Field:=columna, Criteria1:=filtro
-    Else
-        ' Si el textbox está vacío, quitar filtros
-        On Error Resume Next
-        If ws.FilterMode Then ws.ShowAllData
-        On Error GoTo 0
-    End If
-End Sub
+Cada par debe ser evaluado y, si se ha respondido, registrar un elemento independiente en la lista de SharePoint.
+
+Quiero que se puedan omitir pares sin respuesta (ni tiempo ni detalle) y que el flujo sea robusto, para evitar errores si algunos campos están vacíos.

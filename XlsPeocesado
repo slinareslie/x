@@ -1,3 +1,5 @@
+https://1drv.ms/f/c/382bae9df2c5aacc/En_05KHmpBRCgcxUFAyw92YBt8j0H0G6-43HRwkdpr3dtw?e=eQWckX
+
 Private Sub TextBox1_Change()
     Dim filtro As String
     Dim columna As Integer

@@ -1,12 +1,93 @@
-@startwbs
-* Mis Carpetas
-** Proyectos
-*** Proyecto A
-*** Proyecto B
-** Personal
-*** Documentos
-*** Fotos
-** Recursos
-*** Libros
-*** Plantillas
-@endwbs
+Aquí tienes **nombres de carpetas claros, identificables, pero no muy largos**, basados en cada ítem para organizar en tu PC (o en SharePoint, OneDrive, NAS) sin perder contexto:
+
+---
+
+## 📂 **Nombres propuestos:**
+
+1️⃣ **Clave Extranet Empresas**
+(Tramitación de Clave Extranet Solicitada por Empresas de Carga Internacional)
+
+2️⃣ **Anulación Manifiestos**
+
+3️⃣ **Actas DAF Santa Rosa**
+(Evaluación de actas remitidas y seguimiento memorándums DAF-SDA)
+
+4️⃣ **Gestión Casillas CEU-CECA**
+
+5️⃣ **Atención OCE Presencial**
+
+6️⃣ **Atención OCE Virtual**
+
+7️⃣ **Seguimiento Vigencias Avisos**
+(Reporte de vigencias y emisión de avisos a OCE)
+
+8️⃣ **Rectificación Manifiestos**
+
+9️⃣ **Seguimiento IVA IRM Descarga**
+(Control de IVA, IRM y término de descarga ZOFRATACNA)
+
+10️⃣ **Numeración Manual Manif**
+
+11️⃣ **Control Registros Manif**
+(Control manifiestos ingreso/salida, gestión de riesgo)
+
+12️⃣ **Seguimiento Manif Aéreos**
+
+13️⃣ **Control Datado Manif**
+
+14️⃣ **Control Reg Contenedores**
+
+15️⃣ **Gestión Planeación SM**
+(Apoyo gestión, planeación, propuestas de mejora)
+
+16️⃣ **Monitoreo Plan UUOO 2025**
+(Seguimiento actividades IA Tacna 2025)
+
+17️⃣ **Monitoreo Correos PAMC**
+(Seguimiento correos duplicados y reportes PAMC)
+
+18️⃣ **Plan Acción Matriz Riesgo**
+(Monitoreo plan de medidas de control)
+
+19️⃣ **Seguimiento Actos Manif**
+(Actos relacionados al manifiesto de ingreso/salida)
+
+20️⃣ **Atención Solicitudes SM**
+(Rectificaciones, abandonos, prórrogas despacho diferido)
+
+21️⃣ **Autorización Zona Sec**
+(Autorización de descarga en zona secundaria)
+
+22️⃣ **Solicitudes Transparencia**
+
+23️⃣ **Gestión Deuda**
+
+24️⃣ **Culminación Subprocesos**
+(Vinculados a documentos con riesgo de prescripción)
+
+25️⃣ **Seguimiento Abandono Legal**
+
+26️⃣ **Datado Manif Ingreso**
+
+27️⃣ **Archivo Documentos Físicos**
+
+28️⃣ **Gestión SharePoint SM**
+(Repositorios, expedientes mixtos, otras actividades)
+
+29️⃣ **Apoyo Admin Logístico**
+
+30️⃣ **Otras Actividades SM**
+(Clima laboral, integridad, otras indicadas por intendencia)
+
+---
+
+## 🚩 **Características:**
+
+✅ Nombres **cortos y claros**, pero reflejan exactamente el proceso.
+✅ Evitan ambigüedad al buscarlos en el explorador.
+✅ Listos para crear y arrastrar documentos según flujo real.
+✅ Pueden ser numerados (01, 02, 03...) si deseas control de orden.
+
+---
+
+Si lo deseas, puedo generarte ahora un **`.puml` de PlantUML en estilo WBS** para visualizar esta estructura de carpetas como árbol antes de crearlas, facilitando planificación y comunicación con tu equipo. Avísame si quieres esto.

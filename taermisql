@@ -1,15 +1,12 @@
-UpdateContext({locShowPopupBorrar: false});
-
-If(
-    !IsBlank(BrowseGallery1.Selected);
-    With(
-        {registroSeleccionado: BrowseGallery1.Selected};
-        If(
-            IsEmpty(Errors([@'Directorio Final Local']; registroSeleccionado));
-            Remove([@'Directorio Final Local']; registroSeleccionado);
-            Notify("No se pudo eliminar el registro", NotificationType.Error)
-        )
-    )
-);
-
-Navigate(BrowseScreen1; ScreenTransition.None)
+@startwbs
+* Mis Carpetas
+** Proyectos
+*** Proyecto A
+*** Proyecto B
+** Personal
+*** Documentos
+*** Fotos
+** Recursos
+*** Libros
+*** Plantillas
+@endwbs

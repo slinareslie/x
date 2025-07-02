@@ -1,21 +1,8 @@
-# Para que lo trate como texto sin cambiar el tipo:
-$worksheet.Range("H4", $worksheet.Cells.Item($data.Length + 3, 8)).NumberFormat = "@"
-
-$worksheet.Range("H4", $worksheet.Cells.Item($data.Length + 3, 8)).NumberFormat = "dd/mm/yyyy hh:mm:ss"
-$worksheet.Range("I4", $worksheet.Cells.Item($data.Length + 3, 9)).NumberFormat = "dd/mm/yyyy hh:mm:ss"
-
-
-
-$cellValue = $data[$row][$col]
-if ($col -eq 7 -or $col -eq 8) {
-    # Columnas H (8) e I (9) son fechas -> índices 7 y 8 (cero-indexado)
-    try {
-        $worksheet.Cells.Item($row + 4, $col + 1).Value2 = [datetime]$cellValue
-    } catch {
-        $worksheet.Cells.Item($row + 4, $col + 1).Value2 = $cellValue  # fallback
-    }
-} elseif ($col -eq 11 -or $col -eq 12) {
-    $worksheet.Cells.Item($row + 4, $col + 1).Value2 = [double]$cellValue
-} else {
-    $worksheet.Cells.Item($row + 4, $col + 1).Value2 = [string]$cellValue
-}
+FechaReal = 
+VAR FechaTexto = [Hora de envio]
+VAR Dia = MID(FechaTexto, 4, 2)
+VAR Mes = LEFT(FechaTexto, 2)
+VAR Anio = MID(FechaTexto, 7, 4)
+VAR Hora = MID(FechaTexto, 12, 8)
+RETURN
+    DATEVALUE(Dia & "/" & Mes & "/" & Anio) + TIMEVALUE(Hora)

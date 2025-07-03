@@ -1,6 +1,2 @@
-$path = "C:\Ruta\A\Tu\Carpeta"
-Get-ChildItem -Recurse -Directory -Path $path | 
-    ForEach-Object {
-        $indent = ($_.FullName.Replace($path,"")).Split("\").Count - 1
-        (" " * $indent * 2) + $_.Name
-    }
+Get-ChildItem -Recurse | Where-Object { $_.PSIsContainer } | 
+    ForEach-Object { $_.FullName }

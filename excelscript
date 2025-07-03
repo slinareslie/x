@@ -1,8 +1,6 @@
-FechaReal = 
-VAR FechaTexto = [Hora de envio]
-VAR Dia = MID(FechaTexto, 4, 2)
-VAR Mes = LEFT(FechaTexto, 2)
-VAR Anio = MID(FechaTexto, 7, 4)
-VAR Hora = MID(FechaTexto, 12, 8)
-RETURN
-    DATEVALUE(Dia & "/" & Mes & "/" & Anio) + TIMEVALUE(Hora)
+$path = "C:\Ruta\A\Tu\Carpeta"
+Get-ChildItem -Recurse -Directory -Path $path | 
+    ForEach-Object {
+        $indent = ($_.FullName.Replace($path,"")).Split("\").Count - 1
+        (" " * $indent * 2) + $_.Name
+    }

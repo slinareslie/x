@@ -1,78 +1,43 @@
-Add-Type -AssemblyName System.Windows.Forms
-
-function Generate-PlantUMLMindMap {
-    param(
-        [string]$directoryPath,
-        [string]$outputFile
-    )
-
-    # Verificar si la ruta es válida
-    if (-Not (Test-Path $directoryPath)) {
-        Write-Host "La ruta no existe: $directoryPath"
-        return
-    }
-
-    # Usamos un ArrayList para acumular las líneas
-    $lines = [System.Collections.ArrayList]::new()
-    $null = $lines.Add("@startmindmap")
-    $null = $lines.Add("* $directoryPath")
-
-    # Función recursiva para procesar carpetas y archivos
-    function Process-Directory {
-        param(
-            [string]$dirPath,
-            [int]$level
-        )
-
-        try {
-            # Obtener archivos en el directorio
-            $files = Get-ChildItem -Path $dirPath -File -ErrorAction Stop
-            foreach ($file in $files) {
-                $indent = "*" * ($level + 1)
-                $null = $lines.Add("$indent $($file.Name)")
-            }
-
-            # Obtener subdirectorios
-            $subDirs = Get-ChildItem -Path $dirPath -Directory -ErrorAction Stop
-            foreach ($subDir in $subDirs) {
-                $indent = "*" * ($level + 1)
-                $null = $lines.Add("$indent $($subDir.Name)")
-                Process-Directory -dirPath $subDir.FullName -level ($level + 1)
-            }
-        }
-        catch {
-            # Ignorar errores por rutas inexistentes o inaccesibles
-        }
-    }
-
-    # Procesar la carpeta raíz
-    Process-Directory -dirPath $directoryPath -level 1
-    $null = $lines.Add("@endmindmap")
-
-    try {
-        $lines | Out-File -FilePath $outputFile -Encoding UTF8 -ErrorAction Stop
-        Write-Host "`n✅ Mindmap generado correctamente en:`n$outputFile`n"
-    }
-    catch {
-        Write-Host "`n❌ Error al guardar el archivo:`n$_`n"
-    }
+@startuml
+skinparam rectangle {
+  BackgroundColor #D0E4F5
+  BorderColor Black
 }
 
-# Solicitar al usuario que ingrese la ruta de la carpeta a mapear
-$path = Read-Host "🗂️ Ingresa la ruta de la carpeta que deseas mapear"
+' Niveles superiores
+rectangle "Intendencia de Aduana de Tacna\n3G0000" as IAT
+rectangle "División de Técnica Aduanera\n3G0100" as DTA
 
-# Cuadro de diálogo para guardar el archivo
-$SaveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
-$SaveFileDialog.InitialDirectory = [Environment]::GetFolderPath("Desktop")
-$SaveFileDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*"
-$SaveFileDialog.FileName = "mindmap_output.txt"
-$SaveFileDialog.Title = "Guardar archivo de Mindmap como..."
+IAT -down-> DTA
 
-$null = $SaveFileDialog.ShowDialog()
+' Secciones
+rectangle "Sección de Regímenes Definitivos\n3G0150" as SRD
+rectangle "Sección de Regímenes No Definitivos\n3G0160" as SRND
+rectangle "Sección de Manifiestos\n3G0140" as SM
 
-if ($SaveFileDialog.FileName -ne "") {
-    $outputFile = $SaveFileDialog.FileName
-    Generate-PlantUMLMindMap -directoryPath $path -outputFile $outputFile
-} else {
-    Write-Host "`n⚠️ Operación cancelada: no se generó ningún archivo.`n"
-}
+DTA -down-> SRD
+DTA -down-> SRND
+DTA -down-> SM
+
+' Subordinado de Sección de Manifiestos
+rectangle "Jefatura de Sección" as JS
+SM -down-> JS
+
+' Actividades y responsables bajo Jefatura de Sección
+rectangle "Rectificación de manifiestos y documentos vinculados\n• Vitaliano Gil\n• Miguel Susánabar" as RMDV
+rectangle "Seguimiento de mercancías en abandono legal\n• Juan Valverde\n• Edward Zegarra" as SMAL
+rectangle "Numeración de manifiestos\n• Miguel Susánabar\n• Julia Mamani" as NM
+rectangle "Seguimiento de actos vinculados a manifiestos y control carga e info\n• Yenny Peña\n• Renny Rodríguez" as SAVMC
+rectangle "Tramitación de claves extranet OCE, casillas electrónicas, atención usuarios\n• Melany Tineo\n• Fiorella Guardia" as TCEO
+rectangle "Apoyo administrativo y logístico\n• Carmen Muñoz\n• Walter Vidoso\n• Marvin Jiménez" as AAL
+rectangle "Modalidad Formativa\n• Eddie Chipana Miranda" as MF
+
+JS -down-> RMDV
+JS -down-> SMAL
+JS -down-> NM
+JS -down-> SAVMC
+JS -down-> TCEO
+JS -down-> AAL
+JS -down-> MF
+
+@enduml

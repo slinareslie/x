@@ -1,7 +1,9 @@
+Add-Type -AssemblyName System.Windows.Forms
+
 function Generate-PlantUMLMindMap {
     param(
         [string]$directoryPath,
-        [string]$outputFile = "mindmap_output.txt"
+        [string]$outputFile
     )
 
     # Verificar si la ruta es válida
@@ -45,21 +47,32 @@ function Generate-PlantUMLMindMap {
 
     # Procesar la carpeta raíz
     Process-Directory -dirPath $directoryPath -level 1
-
     $null = $lines.Add("@endmindmap")
 
-    # Guardar en el archivo de salida
-    $lines | Out-File -FilePath $outputFile -Encoding UTF8
-
-    Write-Host "Mindmap generado correctamente en: $outputFile"
+    try {
+        $lines | Out-File -FilePath $outputFile -Encoding UTF8 -ErrorAction Stop
+        Write-Host "`n✅ Mindmap generado correctamente en:`n$outputFile`n"
+    }
+    catch {
+        Write-Host "`n❌ Error al guardar el archivo:`n$_`n"
+    }
 }
 
-# Solicitar al usuario que ingrese una ruta
-$path = Read-Host "Ingresa la ruta de la carpeta"
-# Solicitar nombre de archivo opcional
-$outputFile = Read-Host "Ingresa el nombre del archivo de salida (o deja en blanco para 'mindmap_output.txt')"
-if ([string]::IsNullOrWhiteSpace($outputFile)) {
-    $outputFile = "mindmap_output.txt"
-}
+# Solicitar al usuario que ingrese la ruta de la carpeta a mapear
+$path = Read-Host "🗂️ Ingresa la ruta de la carpeta que deseas mapear"
 
-Generate-PlantUMLMindMap -directoryPath $path -outputFile $outputFile
+# Cuadro de diálogo para guardar el archivo
+$SaveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
+$SaveFileDialog.InitialDirectory = [Environment]::GetFolderPath("Desktop")
+$SaveFileDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*"
+$SaveFileDialog.FileName = "mindmap_output.txt"
+$SaveFileDialog.Title = "Guardar archivo de Mindmap como..."
+
+$null = $SaveFileDialog.ShowDialog()
+
+if ($SaveFileDialog.FileName -ne "") {
+    $outputFile = $SaveFileDialog.FileName
+    Generate-PlantUMLMindMap -directoryPath $path -outputFile $outputFile
+} else {
+    Write-Host "`n⚠️ Operación cancelada: no se generó ningún archivo.`n"
+}

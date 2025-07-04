@@ -1,2 +1,65 @@
-Get-ChildItem -Recurse | Where-Object { $_.PSIsContainer } | 
-    ForEach-Object { $_.FullName }
+function Generate-PlantUMLMindMap {
+    param(
+        [string]$directoryPath,
+        [string]$outputFile = "mindmap_output.txt"
+    )
+
+    # Verificar si la ruta es válida
+    if (-Not (Test-Path $directoryPath)) {
+        Write-Host "La ruta no existe: $directoryPath"
+        return
+    }
+
+    # Usamos un ArrayList para acumular las líneas
+    $lines = [System.Collections.ArrayList]::new()
+    $null = $lines.Add("@startmindmap")
+    $null = $lines.Add("* $directoryPath")
+
+    # Función recursiva para procesar carpetas y archivos
+    function Process-Directory {
+        param(
+            [string]$dirPath,
+            [int]$level
+        )
+
+        try {
+            # Obtener archivos en el directorio
+            $files = Get-ChildItem -Path $dirPath -File -ErrorAction Stop
+            foreach ($file in $files) {
+                $indent = "*" * ($level + 1)
+                $null = $lines.Add("$indent $($file.Name)")
+            }
+
+            # Obtener subdirectorios
+            $subDirs = Get-ChildItem -Path $dirPath -Directory -ErrorAction Stop
+            foreach ($subDir in $subDirs) {
+                $indent = "*" * ($level + 1)
+                $null = $lines.Add("$indent $($subDir.Name)")
+                Process-Directory -dirPath $subDir.FullName -level ($level + 1)
+            }
+        }
+        catch {
+            # Ignorar errores por rutas inexistentes o inaccesibles
+        }
+    }
+
+    # Procesar la carpeta raíz
+    Process-Directory -dirPath $directoryPath -level 1
+
+    $null = $lines.Add("@endmindmap")
+
+    # Guardar en el archivo de salida
+    $lines | Out-File -FilePath $outputFile -Encoding UTF8
+
+    Write-Host "Mindmap generado correctamente en: $outputFile"
+}
+
+# Solicitar al usuario que ingrese una ruta
+$path = Read-Host "Ingresa la ruta de la carpeta"
+# Solicitar nombre de archivo opcional
+$outputFile = Read-Host "Ingresa el nombre del archivo de salida (o deja en blanco para 'mindmap_output.txt')"
+if ([string]::IsNullOrWhiteSpace($outputFile)) {
+    $outputFile = "mindmap_output.txt"
+}
+
+Generate-PlantUMLMindMap -directoryPath $path -outputFile $outputFile

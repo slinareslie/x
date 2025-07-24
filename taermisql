@@ -1,77 +1,20 @@
-Sub LeftJoinHoja1Hoja2()
-    Dim ws1 As Worksheet, ws2 As Worksheet, ws3 As Worksheet
-    Dim dict As Object
-    Dim lastRow1 As Long, lastRow2 As Long, i As Long, j As Long
-    Dim codigo As Variant
-    Dim nextRow As Long
-
-    Set ws1 = Sheets("Hoja1")
-    Set ws2 = Sheets("Hoja2")
-    
-    On Error Resume Next
-    Set ws3 = Sheets("Hoja3")
-    If ws3 Is Nothing Then
-        Set ws3 = Sheets.Add(After:=Sheets(Sheets.Count))
-        ws3.Name = "Hoja3"
-    Else
-        ws3.Cells.Clear
-    End If
-    On Error GoTo 0
-
-    Set dict = CreateObject("Scripting.Dictionary")
-
-    ' Cargar códigos y datos de Hoja2 en el diccionario
-    lastRow2 = ws2.Cells(ws2.Rows.Count, "B").End(xlUp).Row
-    For i = 2 To lastRow2
-        codigo = ws2.Cells(i, "B").Value
-        If Not dict.Exists(codigo) Then
-            dict.Add codigo, Application.Index(ws2.Rows(i), 1, 0)
-        End If
-    Next i
-
-    ' Cabeceras en Hoja3
-    ws3.Cells(1, 1).Value = "Código"
-    
-    ' Copiar encabezados de Hoja1
-    For j = 2 To ws1.Cells(1, ws1.Columns.Count).End(xlToLeft).Column
-        ws3.Cells(1, j).Value = ws1.Cells(1, j).Value & "_Hoja1"
-    Next j
-    
-    ' Copiar encabezados de Hoja2
-    Dim colOffset As Long
-    colOffset = j - 1
-    For j = 1 To ws2.Cells(1, ws2.Columns.Count).End(xlToLeft).Column
-        ws3.Cells(1, colOffset + j).Value = ws2.Cells(1, j).Value & "_Hoja2"
-    Next j
-
-    ' Emparejar y pegar en Hoja3
-    lastRow1 = ws1.Cells(ws1.Rows.Count, "A").End(xlUp).Row
-    nextRow = 2
-
-    For i = 2 To lastRow1
-        codigo = ws1.Cells(i, "A").Value
-        
-        ws3.Cells(nextRow, 1).Value = codigo
-        
-        ' Copiar columnas de Hoja1
-        For j = 2 To ws1.Cells(1, ws1.Columns.Count).End(xlToLeft).Column
-            ws3.Cells(nextRow, j).Value = ws1.Cells(i, j).Value
-        Next j
-        
-        ' Si existe en Hoja2, copiar, sino dejar vacío
-        If dict.Exists(codigo) Then
-            For j = 1 To ws2.Cells(1, ws2.Columns.Count).End(xlToLeft).Column
-                ws3.Cells(nextRow, colOffset + j).Value = dict(codigo)(1, j)
-            Next j
-        Else
-            ' Dejar celdas vacías de Hoja2
-            For j = 1 To ws2.Cells(1, ws2.Columns.Count).End(xlToLeft).Column
-                ws3.Cells(nextRow, colOffset + j).Value = ""
-            Next j
-        End If
-        
-        nextRow = nextRow + 1
-    Next i
-
-    MsgBox "LEFT JOIN completado en Hoja3 con " & nextRow - 2 & " registros.", vbInformation
-End Sub
+SELECT 
+    A.NOMBRE_EMPR AS NOMBRE_EMPRESA,
+    A.CODI_EMPR AS CODIGO_EMPRESA,
+    COUNT(*) AS CANTIDAD_EXPEDIENTES
+FROM EXPEDI A
+WHERE A.ANOEXPEDI = '2025'
+  AND A.PROCEDIM IN ('2301', '3068')
+  AND A.CODI_ADUA = '172'
+  AND A.ASUNTO NOT LIKE '%TRANSITO%'
+  AND A.FECH_CONC > 0
+  AND A.CODDEPEN = '3G0140'
+  AND TO_DATE(SUBSTR(TO_CHAR(A.FECEXP), 1, 4) || '/' ||
+              SUBSTR(TO_CHAR(A.FECEXP), 5, 2) || '/' ||
+              SUBSTR(TO_CHAR(A.FECEXP), 7, 2),
+              'YYYY/MM/DD') >= TO_DATE('2025/01/01', 'YYYY/MM/DD')
+GROUP BY 
+    A.NOMBRE_EMPR,
+    A.CODI_EMPR
+ORDER BY 
+    NOMBRE_EMPRESA;

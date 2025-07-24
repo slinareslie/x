@@ -1,20 +1,31 @@
-SELECT 
-    A.NOMBRE_EMPR AS NOMBRE_EMPRESA,
-    A.CODI_EMPR AS CODIGO_EMPRESA,
-    COUNT(*) AS CANTIDAD_EXPEDIENTES
-FROM EXPEDI A
-WHERE A.ANOEXPEDI = '2025'
-  AND A.PROCEDIM IN ('2301', '3068')
-  AND A.CODI_ADUA = '172'
-  AND A.ASUNTO NOT LIKE '%TRANSITO%'
-  AND A.FECH_CONC > 0
-  AND A.CODDEPEN = '3G0140'
-  AND TO_DATE(SUBSTR(TO_CHAR(A.FECEXP), 1, 4) || '/' ||
-              SUBSTR(TO_CHAR(A.FECEXP), 5, 2) || '/' ||
-              SUBSTR(TO_CHAR(A.FECEXP), 7, 2),
-              'YYYY/MM/DD') >= TO_DATE('2025/01/01', 'YYYY/MM/DD')
-GROUP BY 
-    A.NOMBRE_EMPR,
-    A.CODI_EMPR
-ORDER BY 
-    NOMBRE_EMPRESA;
+@echo off
+REM Verificar si SQL Developer está abierto antes de continuar
+tasklist /FI "IMAGENAME eq sqldeveloper.exe" 2>NUL | find /I /N "sqldeveloper.exe">NUL
+if "%ERRORLEVEL%"=="0" (
+    echo ============================================
+    echo SQL Developer está abierto.
+    echo Por favor, cierre SQL Developer antes de continuar con la extracción.
+    echo ============================================
+    pause
+    exit /b
+)
+
+REM Definir la fecha en formato dd-mm-yyyy
+for /f "tokens=2 delims==" %%I in ('"wmic OS Get localdatetime /value"') do set datetime=%%I
+set fecha=%datetime:~6,2%-%datetime:~4,2%-%datetime:~0,4%
+
+REM Definir la ruta de destino para el archivo CSV
+set carpeta=D:\SEBASTIAN\Taermi Final\csv\
+
+REM Asegurarse de que la ruta termine con una barra invertida (\)
+if not "%carpeta:~-1%" == "\" set carpeta=%carpeta%\
+
+REM Definir el nombre del archivo CSV de salida
+set archivo=%carpeta%MCI-TAERMI-%fecha%.csv
+set archivo1=MCI-TAERMI-%fecha%.csv
+
+REM Ejecutar la consulta y exportarla a un archivo CSV
+REM sqlplus -S usuario/BD.@sadda @TAERMI-AUT.sql
+
+echo Extracción completada exitosamente.
+pause

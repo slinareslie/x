@@ -1,93 +1,68 @@
-Aquí tienes **nombres de carpetas claros, identificables, pero no muy largos**, basados en cada ítem para organizar en tu PC (o en SharePoint, OneDrive, NAS) sin perder contexto:
+Sub InnerJoinHoja1Hoja2()
+    Dim ws1 As Worksheet, ws2 As Worksheet, ws3 As Worksheet
+    Dim dict As Object
+    Dim lastRow1 As Long, lastRow2 As Long, i As Long, j As Long
+    Dim codigo As Variant
+    Dim nextRow As Long
 
----
+    Set ws1 = Sheets("Hoja1")
+    Set ws2 = Sheets("Hoja2")
+    
+    On Error Resume Next
+    Set ws3 = Sheets("Hoja3")
+    If ws3 Is Nothing Then
+        Set ws3 = Sheets.Add(After:=Sheets(Sheets.Count))
+        ws3.Name = "Hoja3"
+    Else
+        ws3.Cells.Clear
+    End If
+    On Error GoTo 0
 
-## 📂 **Nombres propuestos:**
+    Set dict = CreateObject("Scripting.Dictionary")
 
-1️⃣ **Clave Extranet Empresas**
-(Tramitación de Clave Extranet Solicitada por Empresas de Carga Internacional)
+    ' Cargar códigos y datos de Hoja2 en el diccionario
+    lastRow2 = ws2.Cells(ws2.Rows.Count, "B").End(xlUp).Row
+    For i = 2 To lastRow2
+        codigo = ws2.Cells(i, "B").Value
+        If Not dict.Exists(codigo) Then
+            dict.Add codigo, Application.Index(ws2.Rows(i), 1, 0)
+        End If
+    Next i
 
-2️⃣ **Anulación Manifiestos**
+    ' Cabeceras en Hoja3
+    ws3.Cells(1, 1).Value = "Código"
+    
+    ' Copiar encabezados de Hoja1
+    For j = 2 To ws1.Cells(1, ws1.Columns.Count).End(xlToLeft).Column
+        ws3.Cells(1, j).Value = ws1.Cells(1, j).Value & "_Hoja1"
+    Next j
+    
+    ' Copiar encabezados de Hoja2
+    Dim colOffset As Long
+    colOffset = j - 1
+    For j = 1 To ws2.Cells(1, ws2.Columns.Count).End(xlToLeft).Column
+        ws3.Cells(1, colOffset + j).Value = ws2.Cells(1, j).Value & "_Hoja2"
+    Next j
 
-3️⃣ **Actas DAF Santa Rosa**
-(Evaluación de actas remitidas y seguimiento memorándums DAF-SDA)
+    ' Emparejar y pegar en Hoja3
+    lastRow1 = ws1.Cells(ws1.Rows.Count, "A").End(xlUp).Row
+    nextRow = 2
 
-4️⃣ **Gestión Casillas CEU-CECA**
+    For i = 2 To lastRow1
+        codigo = ws1.Cells(i, "A").Value
+        If dict.Exists(codigo) Then
+            ws3.Cells(nextRow, 1).Value = codigo
+            ' Copiar columnas de Hoja1
+            For j = 2 To ws1.Cells(1, ws1.Columns.Count).End(xlToLeft).Column
+                ws3.Cells(nextRow, j).Value = ws1.Cells(i, j).Value
+            Next j
+            ' Copiar toda la fila de Hoja2
+            For j = 1 To ws2.Cells(1, ws2.Columns.Count).End(xlToLeft).Column
+                ws3.Cells(nextRow, colOffset + j).Value = dict(codigo)(1, j)
+            Next j
+            nextRow = nextRow + 1
+        End If
+    Next i
 
-5️⃣ **Atención OCE Presencial**
-
-6️⃣ **Atención OCE Virtual**
-
-7️⃣ **Seguimiento Vigencias Avisos**
-(Reporte de vigencias y emisión de avisos a OCE)
-
-8️⃣ **Rectificación Manifiestos**
-
-9️⃣ **Seguimiento IVA IRM Descarga**
-(Control de IVA, IRM y término de descarga ZOFRATACNA)
-
-10️⃣ **Numeración Manual Manif**
-
-11️⃣ **Control Registros Manif**
-(Control manifiestos ingreso/salida, gestión de riesgo)
-
-12️⃣ **Seguimiento Manif Aéreos**
-
-13️⃣ **Control Datado Manif**
-
-14️⃣ **Control Reg Contenedores**
-
-15️⃣ **Gestión Planeación SM**
-(Apoyo gestión, planeación, propuestas de mejora)
-
-16️⃣ **Monitoreo Plan UUOO 2025**
-(Seguimiento actividades IA Tacna 2025)
-
-17️⃣ **Monitoreo Correos PAMC**
-(Seguimiento correos duplicados y reportes PAMC)
-
-18️⃣ **Plan Acción Matriz Riesgo**
-(Monitoreo plan de medidas de control)
-
-19️⃣ **Seguimiento Actos Manif**
-(Actos relacionados al manifiesto de ingreso/salida)
-
-20️⃣ **Atención Solicitudes SM**
-(Rectificaciones, abandonos, prórrogas despacho diferido)
-
-21️⃣ **Autorización Zona Sec**
-(Autorización de descarga en zona secundaria)
-
-22️⃣ **Solicitudes Transparencia**
-
-23️⃣ **Gestión Deuda**
-
-24️⃣ **Culminación Subprocesos**
-(Vinculados a documentos con riesgo de prescripción)
-
-25️⃣ **Seguimiento Abandono Legal**
-
-26️⃣ **Datado Manif Ingreso**
-
-27️⃣ **Archivo Documentos Físicos**
-
-28️⃣ **Gestión SharePoint SM**
-(Repositorios, expedientes mixtos, otras actividades)
-
-29️⃣ **Apoyo Admin Logístico**
-
-30️⃣ **Otras Actividades SM**
-(Clima laboral, integridad, otras indicadas por intendencia)
-
----
-
-## 🚩 **Características:**
-
-✅ Nombres **cortos y claros**, pero reflejan exactamente el proceso.
-✅ Evitan ambigüedad al buscarlos en el explorador.
-✅ Listos para crear y arrastrar documentos según flujo real.
-✅ Pueden ser numerados (01, 02, 03...) si deseas control de orden.
-
----
-
-Si lo deseas, puedo generarte ahora un **`.puml` de PlantUML en estilo WBS** para visualizar esta estructura de carpetas como árbol antes de crearlas, facilitando planificación y comunicación con tu equipo. Avísame si quieres esto.
+    MsgBox "INNER JOIN completado en Hoja3 con " & nextRow - 2 & " registros emparejados.", vbInformation
+End Sub

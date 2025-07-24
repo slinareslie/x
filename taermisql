@@ -1,4 +1,4 @@
-Sub InnerJoinHoja1Hoja2()
+Sub LeftJoinHoja1Hoja2()
     Dim ws1 As Worksheet, ws2 As Worksheet, ws3 As Worksheet
     Dim dict As Object
     Dim lastRow1 As Long, lastRow2 As Long, i As Long, j As Long
@@ -50,19 +50,28 @@ Sub InnerJoinHoja1Hoja2()
 
     For i = 2 To lastRow1
         codigo = ws1.Cells(i, "A").Value
+        
+        ws3.Cells(nextRow, 1).Value = codigo
+        
+        ' Copiar columnas de Hoja1
+        For j = 2 To ws1.Cells(1, ws1.Columns.Count).End(xlToLeft).Column
+            ws3.Cells(nextRow, j).Value = ws1.Cells(i, j).Value
+        Next j
+        
+        ' Si existe en Hoja2, copiar, sino dejar vacío
         If dict.Exists(codigo) Then
-            ws3.Cells(nextRow, 1).Value = codigo
-            ' Copiar columnas de Hoja1
-            For j = 2 To ws1.Cells(1, ws1.Columns.Count).End(xlToLeft).Column
-                ws3.Cells(nextRow, j).Value = ws1.Cells(i, j).Value
-            Next j
-            ' Copiar toda la fila de Hoja2
             For j = 1 To ws2.Cells(1, ws2.Columns.Count).End(xlToLeft).Column
                 ws3.Cells(nextRow, colOffset + j).Value = dict(codigo)(1, j)
             Next j
-            nextRow = nextRow + 1
+        Else
+            ' Dejar celdas vacías de Hoja2
+            For j = 1 To ws2.Cells(1, ws2.Columns.Count).End(xlToLeft).Column
+                ws3.Cells(nextRow, colOffset + j).Value = ""
+            Next j
         End If
+        
+        nextRow = nextRow + 1
     Next i
 
-    MsgBox "INNER JOIN completado en Hoja3 con " & nextRow - 2 & " registros emparejados.", vbInformation
+    MsgBox "LEFT JOIN completado en Hoja3 con " & nextRow - 2 & " registros.", vbInformation
 End Sub

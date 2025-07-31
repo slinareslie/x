@@ -1,56 +1,51 @@
-Aquí tienes un **análisis más profundo, técnico y alineado a informe SUNAT**, complementando el **Gráfico N° 02**, listo para reemplazar tu párrafo actual:
+# Desactivar alertas
+$excel.DisplayAlerts = $false
 
----
+# Crear hoja temporal
+$tempSheet = $workbook.Sheets.Add()
+$tempSheet.Name = "Temporal"
 
-Estos datos reflejan una **reducción del 87% en el tiempo operativo diario destinado a la generación de reportes**, lo que implica pasar de 90 minutos a solo 12 minutos por día. Este ahorro de tiempo, equivalente a **6 horas y 30 minutos semanales** y **26 horas mensuales aproximadamente**, representa una recuperación de tiempo operativo que puede ser redirigido a actividades de análisis, control y supervisión de expedientes de rectificación.
+# Copiar estadísticas
+$sheetStats.UsedRange.Copy()
+$tempSheet.Range("A1").PasteSpecial(-4104)
 
-**Impactos identificados:**
+# Limpiar portapapeles
+[System.Windows.Forms.Clipboard]::Clear()
 
-1. **Mejora en la oportunidad de información:**
+# Fila de inicio
+$rowStart = $sheetStats.UsedRange.Rows.Count + 2
+$lastRow = $sheetDatos.UsedRange.Rows.Count
 
-   * El reporte, que antes se disponía alrededor de las 11:30 a.m., ahora se encuentra disponible desde las 8:30 a.m., permitiendo que las decisiones estratégicas de priorización de expedientes y alertas de vencimientos se realicen durante la primera hora de la jornada.
-   * Esta anticipación favorece la programación de actividades de los analistas y evita cuellos de botella en el procesamiento de expedientes.
+# Copiar columnas específicas desde hoja "Datos"
+$sheetDatos.Range("F2:F$lastRow").Copy()
+$tempSheet.Range("A$rowStart").PasteSpecial(-4104)
+$sheetDatos.Range("H2:H$lastRow").Copy()
+$tempSheet.Range("B$rowStart").PasteSpecial(-4104)
+$sheetDatos.Range("I2:I$lastRow").Copy()
+$tempSheet.Range("C$rowStart").PasteSpecial(-4104)
+$sheetDatos.Range("J2:J$lastRow").Copy()
+$tempSheet.Range("D$rowStart").PasteSpecial(-4104)
+$sheetDatos.Range("L2:L$lastRow").Copy()
+$tempSheet.Range("E$rowStart").PasteSpecial(-4104)
 
-2. **Reducción del riesgo operativo:**
+# Limpiar portapapeles y desactivar selección
+$excel.CutCopyMode = $false
 
-   * Al eliminar pasos manuales como copiar, pegar, formatear y enviar por correo, se ha reducido a cero la incidencia de errores en la estructura y consistencia de datos reportados.
-   * Se minimiza la dependencia de un único operador y se garantiza la continuidad operativa incluso en ausencias del personal responsable.
+# Ajustar columnas
+$tempSheet.Columns("A").ColumnWidth = 16.5
+$tempSheet.Columns("B").ColumnWidth = 20
+$tempSheet.Columns("C").ColumnWidth = 20
+$tempSheet.Columns("D").AutoFit()
+$tempSheet.Columns("E").ColumnWidth = 13
 
-3. **Incremento en la capacidad de atención:**
+# Exportar a PDF
+$tempSheet.ExportAsFixedFormat(0, $outputPDF)
 
-   * El tiempo liberado ha permitido que el personal técnico pueda atender solicitudes de información adicionales o elaborar análisis ad-hoc sin sacrificar el reporte diario.
-   * Se ha identificado un incremento en la capacidad de atención de aproximadamente un 20% en actividades adicionales vinculadas a la gestión de expedientes.
+# Activar otra hoja antes de borrar
+$workbook.Sheets.Item(1).Activate()
 
-4. **Facilitación del control y la auditoría:**
+# Borrar hoja temporal
+$tempSheet.Delete()
 
-   * Los archivos generados se almacenan de forma estructurada y estandarizada, permitiendo la trazabilidad de cada reporte, facilitando auditorías internas y externas en caso de requerirse la verificación de información reportada.
-
----
-
-### Gráfico N° 02: Comparación de Tiempos en el Proceso de Generación de Reportes (Minutos)
-
-```plantuml
-@startuml
-title Gráfico N° 02: Comparación de tiempos en la generación de reportes diarios
-
-skinparam backgroundColor #FFFFFF
-skinparam Bar {
-    BackgroundColor<<Antes>> #FF9999
-    BackgroundColor<<Después>> #99FF99
-}
-
-bar "Antes (Manual)" as A <<Antes>> 90
-bar "Después (Automatizado)" as B <<Después>> 12
-@enduml
-```
-
-**Interpretación del gráfico:**
-
-* Se evidencia una reducción visual significativa en el tiempo requerido.
-* El bloque rojo representa el proceso manual, con múltiples subprocesos como extracción, limpieza, formateo y envío.
-* El bloque verde refleja la solución automatizada, donde los procesos se integran en una sola ejecución programada.
-* Este cambio operativo contribuye directamente al **incremento en la productividad institucional**, manteniendo la calidad y precisión de la información generada.
-
----
-
-Si deseas, puedo generarte **este gráfico en Excel con colores institucionales (rojo SUNAT, verde eficiencia) listo para insertar en tu Word** para reforzar visualmente tu informe antes de su envío. Avísame si lo deseas ahora para dejar tu documento final listo.
+# Guardar libro
+$workbook.Save()

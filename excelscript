@@ -1,67 +1,15 @@
-# Asegúrate de haber hecho esto antes
-Add-Type -AssemblyName System.Windows.Forms
-$excel = New-Object -ComObject Excel.Application
-$excel.Visible = $false
-$excel.DisplayAlerts = $false
-
-$workbook = $excel.Workbooks.Open($rutaArchivo)
-$sheetStats = $workbook.Sheets.Item("Estadísticas")
-$sheetDatos = $workbook.Sheets.Item("Datos")
-
-# Crear hoja temporal
-$tempSheet = $workbook.Sheets.Add()
-$tempSheet.Name = "Temporal"
-
-# Copiar estadísticas
-$sheetStats.UsedRange.Copy()
-$tempSheet.Range("A1").PasteSpecial(-4104)
-
-# Limpiar portapapeles
-[System.Windows.Forms.Clipboard]::Clear()
-
-# Fila de inicio
-$rowStart = $sheetStats.UsedRange.Rows.Count + 2
-$lastRow = $sheetDatos.UsedRange.Rows.Count
-
-# Copiar columnas específicas desde hoja "Datos"
-$sheetDatos.Range("F2:F$lastRow").Copy()
-$tempSheet.Range("A$rowStart").PasteSpecial(-4104)
-$sheetDatos.Range("H2:H$lastRow").Copy()
-$tempSheet.Range("B$rowStart").PasteSpecial(-4104)
-$sheetDatos.Range("I2:I$lastRow").Copy()
-$tempSheet.Range("C$rowStart").PasteSpecial(-4104)
-$sheetDatos.Range("J2:J$lastRow").Copy()
-$tempSheet.Range("D$rowStart").PasteSpecial(-4104)
-$sheetDatos.Range("L2:L$lastRow").Copy()
-$tempSheet.Range("E$rowStart").PasteSpecial(-4104)
-
-# Salir del modo copiar
-$excel.CutCopyMode = $false
-
-# Ajustes de columnas
-$tempSheet.Columns("A").ColumnWidth = 16.5
-$tempSheet.Columns("B").ColumnWidth = 20
-$tempSheet.Columns("C").ColumnWidth = 20
-$tempSheet.Columns("D").AutoFit()
-$tempSheet.Columns("E").ColumnWidth = 13
-
-# Exportar PDF
-$tempSheet.ExportAsFixedFormat(0, $outputPDF)
+# Desactivar confirmaciones de Excel
+$excelApp.DisplayAlerts = $false
 
 # Activar otra hoja antes de borrar
-$workbook.Sheets.Item(1).Activate()
-$tempSheet.Delete()
+$workbook.Sheets.Item("Datos").Activate()
+
+# Eliminar hoja temporal
+$workbook.Sheets.Item("Temporal").Delete()
 
 # Guardar y cerrar
-$workbook.Save()
-$workbook.Close($true)
-$excel.Quit()
+$workbook.SaveAs($outputExcel, 56)
+$workbook.Close($false)
 
-# Liberar memoria
-[System.Runtime.InteropServices.Marshal]::ReleaseComObject($tempSheet) | Out-Null
-[System.Runtime.InteropServices.Marshal]::ReleaseComObject($sheetStats) | Out-Null
-[System.Runtime.InteropServices.Marshal]::ReleaseComObject($sheetDatos) | Out-Null
-[System.Runtime.InteropServices.Marshal]::ReleaseComObject($workbook) | Out-Null
-[System.Runtime.InteropServices.Marshal]::ReleaseComObject($excel) | Out-Null
-[System.GC]::Collect()
-[System.GC]::WaitForPendingFinalizers()
+# Salir de Excel
+$excelApp.Quit()

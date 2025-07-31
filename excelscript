@@ -1,5 +1,12 @@
-# Desactivar alertas
+# Asegúrate de haber hecho esto antes
+Add-Type -AssemblyName System.Windows.Forms
+$excel = New-Object -ComObject Excel.Application
+$excel.Visible = $false
 $excel.DisplayAlerts = $false
+
+$workbook = $excel.Workbooks.Open($rutaArchivo)
+$sheetStats = $workbook.Sheets.Item("Estadísticas")
+$sheetDatos = $workbook.Sheets.Item("Datos")
 
 # Crear hoja temporal
 $tempSheet = $workbook.Sheets.Add()
@@ -28,24 +35,33 @@ $tempSheet.Range("D$rowStart").PasteSpecial(-4104)
 $sheetDatos.Range("L2:L$lastRow").Copy()
 $tempSheet.Range("E$rowStart").PasteSpecial(-4104)
 
-# Limpiar portapapeles y desactivar selección
+# Salir del modo copiar
 $excel.CutCopyMode = $false
 
-# Ajustar columnas
+# Ajustes de columnas
 $tempSheet.Columns("A").ColumnWidth = 16.5
 $tempSheet.Columns("B").ColumnWidth = 20
 $tempSheet.Columns("C").ColumnWidth = 20
 $tempSheet.Columns("D").AutoFit()
 $tempSheet.Columns("E").ColumnWidth = 13
 
-# Exportar a PDF
+# Exportar PDF
 $tempSheet.ExportAsFixedFormat(0, $outputPDF)
 
 # Activar otra hoja antes de borrar
 $workbook.Sheets.Item(1).Activate()
-
-# Borrar hoja temporal
 $tempSheet.Delete()
 
-# Guardar libro
+# Guardar y cerrar
 $workbook.Save()
+$workbook.Close($true)
+$excel.Quit()
+
+# Liberar memoria
+[System.Runtime.InteropServices.Marshal]::ReleaseComObject($tempSheet) | Out-Null
+[System.Runtime.InteropServices.Marshal]::ReleaseComObject($sheetStats) | Out-Null
+[System.Runtime.InteropServices.Marshal]::ReleaseComObject($sheetDatos) | Out-Null
+[System.Runtime.InteropServices.Marshal]::ReleaseComObject($workbook) | Out-Null
+[System.Runtime.InteropServices.Marshal]::ReleaseComObject($excel) | Out-Null
+[System.GC]::Collect()
+[System.GC]::WaitForPendingFinalizers()

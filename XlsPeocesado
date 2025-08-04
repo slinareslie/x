@@ -1,21 +1,17 @@
-Quiero crear una automatización que se active cada vez que se envíe una respuesta a un formulario de Microsoft Forms llamado "Registro de Tareas".
+$lastRow = $sheetDatos.UsedRange.Rows.Count
+$sheetStats.Cells.Item(3, 2).Value2 = "96 horas"
+$sheetStats.Cells.Item(4, 2).Formula = "=COUNTIF(Datos!L4:L" + $lastRow + ", ""<96"")"
+$sheetStats.Cells.Item(5, 2).Formula = "=COUNTA(Datos!A4:A" + $lastRow + ")"
+$sheetStats.Cells.Item(6, 2).Formula = "=COUNTIF(Datos!L4:L" + $lastRow + ", ""<96"") / COUNTA(Datos!A4:A" + $lastRow + ")"
+$sheetStats.Cells.Item(7, 2).Formula = "=COUNTIF(Datos!L4:L" + $lastRow + ", ""<96"") / COUNTA(Datos!A4:A" + $lastRow + ") * 100"
+$sheetStats.Cells.Item(8, 2).Formula = "=AVERAGE(Datos!L4:L" + $lastRow + ")"
 
-El formulario tiene múltiples pares de preguntas. Cada par representa una actividad: una pregunta sobre el "tiempo invertido" y otra sobre el "detalle" de la tarea. Estas preguntas están agrupadas por tipo:
-
-- Tipo A: 6 pares (12 preguntas)
-- Tipo B: 8 pares (16 preguntas)
-- Tipo C: 10 pares (20 preguntas)
-- Tipo D: 6 pares (12 preguntas)
-- Tipo E: 4 pares (8 preguntas)
-- Tipo F: 2 pares (4 preguntas)
-
-La automatización debe revisar cada par de preguntas y, **solo si hay contenido en alguno de los dos campos** del par (tiempo o detalle), debe **crear un registro en una lista de SharePoint** llamada **"Tareas Realizadas"** con las siguientes columnas:
-
-- `Tipo`: A, B, C, D, E o F (según el grupo de la pregunta)
-- `Especificación`: "Tarea A1", "Tarea B4", etc., según el número de la tarea dentro del grupo
-- `TiempoInvertido`: respuesta del campo de tiempo correspondiente
-- `Detalle`: respuesta del campo de detalle correspondiente
-
-Cada par debe ser evaluado y, si se ha respondido, registrar un elemento independiente en la lista de SharePoint.
-
-Quiero que se puedan omitir pares sin respuesta (ni tiempo ni detalle) y que el flujo sea robusto, para evitar errores si algunos campos están vacíos.
+# Formato
+$sheetStats.Range("A2:A8").Font.Bold = $true
+$sheetStats.Range("A2:A8").Interior.ColorIndex = 36
+$sheetStats.Range("A2:B8").Borders.LineStyle = 1
+$sheetStats.Range("A2:B8").HorizontalAlignment = -4108
+$sheetStats.Cells.Item(6, 2).NumberFormat = "0.00"
+$sheetStats.Cells.Item(7, 2).NumberFormat = "0.00"
+$sheetStats.Cells.Item(8, 2).NumberFormat = "0.00"
+$sheetStats.Columns.AutoFit()

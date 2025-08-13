@@ -1,17 +1,1 @@
-$lastRow = $sheetDatos.UsedRange.Rows.Count
-$sheetStats.Cells.Item(3, 2).Value2 = "96 horas"
-$sheetStats.Cells.Item(4, 2).Formula = "=COUNTIF(Datos!L4:L" + $lastRow + ", ""<96"")"
-$sheetStats.Cells.Item(5, 2).Formula = "=COUNTA(Datos!A4:A" + $lastRow + ")"
-$sheetStats.Cells.Item(6, 2).Formula = "=COUNTIF(Datos!L4:L" + $lastRow + ", ""<96"") / COUNTA(Datos!A4:A" + $lastRow + ")"
-$sheetStats.Cells.Item(7, 2).Formula = "=COUNTIF(Datos!L4:L" + $lastRow + ", ""<96"") / COUNTA(Datos!A4:A" + $lastRow + ") * 100"
-$sheetStats.Cells.Item(8, 2).Formula = "=AVERAGE(Datos!L4:L" + $lastRow + ")"
-
-# Formato
-$sheetStats.Range("A2:A8").Font.Bold = $true
-$sheetStats.Range("A2:A8").Interior.ColorIndex = 36
-$sheetStats.Range("A2:B8").Borders.LineStyle = 1
-$sheetStats.Range("A2:B8").HorizontalAlignment = -4108
-$sheetStats.Cells.Item(6, 2).NumberFormat = "0.00"
-$sheetStats.Cells.Item(7, 2).NumberFormat = "0.00"
-$sheetStats.Cells.Item(8, 2).NumberFormat = "0.00"
-$sheetStats.Columns.AutoFit()
+0.07=1.96*((0.5*0.5)/n)^(1/2)*((218-n)/(218-1))^(1/2)

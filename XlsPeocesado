@@ -1,1 +1,28 @@
-0.07=1.96*((0.5*0.5)/n)^(1/2)*((218-n)/(218-1))^(1/2)
+Sub CambiarNumerosPorTexto()
+    Dim ws As Worksheet
+    Dim celda As Range
+    Dim rng As Range
+    
+    ' Hoja activa
+    Set ws = ActiveSheet
+    
+    ' Rango de columnas M a U (fila 1 hasta la última fila usada)
+    Set rng = ws.Range("M1:U" & ws.Cells(ws.Rows.Count, "M").End(xlUp).Row)
+    
+    For Each celda In rng
+        Select Case celda.Value
+            Case 5
+                celda.Value = "Muy satisfecho"
+            Case 4
+                celda.Value = "Satisfecho"
+            Case 3
+                celda.Value = "Ni satisfecho / ni insatisfecho"
+            Case 2
+                celda.Value = "Insatisfecho"
+            Case 1
+                celda.Value = "Muy insatisfecho"
+            Case Else
+                ' No cambiar nada
+        End Select
+    Next celda
+End Sub

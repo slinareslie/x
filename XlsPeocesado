@@ -1,28 +1,6 @@
-Sub CambiarNumerosPorTexto()
-    Dim ws As Worksheet
-    Dim celda As Range
-    Dim rng As Range
-    
-    ' Hoja activa
-    Set ws = ActiveSheet
-    
-    ' Rango de columnas M a U (fila 1 hasta la última fila usada)
-    Set rng = ws.Range("M1:U" & ws.Cells(ws.Rows.Count, "M").End(xlUp).Row)
-    
-    For Each celda In rng
-        Select Case celda.Value
-            Case 5
-                celda.Value = "Muy satisfecho"
-            Case 4
-                celda.Value = "Satisfecho"
-            Case 3
-                celda.Value = "Ni satisfecho / ni insatisfecho"
-            Case 2
-                celda.Value = "Insatisfecho"
-            Case 1
-                celda.Value = "Muy insatisfecho"
-            Case Else
-                ' No cambiar nada
-        End Select
-    Next celda
-End Sub
+A partir del análisis de la presentación, se pueden extraer las siguientes conclusiones contundentes:
+
+* [cite_start]El promedio general de satisfacción para la Intendencia de Aduana de Tacna es de 3.84 para el control de ingreso de mercancías y de 3.71 para el control de salida, lo que indica un nivel de satisfacción estimado que se encuentra entre "Neutral" y "Muy Satisfecho" según la escala de Likert utilizada[cite: 17, 23, 24, 25, 26, 51].
+* [cite_start]La atención de consultas y orientación es consistentemente el subproceso mejor valorado, obteniendo puntajes de 4.11 en el control de ingreso y 3.92 en el control de salida[cite: 51, 58].
+* [cite_start]La dimensión de "Gestión del Conocimiento" es la peor valorada en ambos procesos, con puntajes de 3.89 en el control de ingreso y 3.54 en el control de salida, lo que indica una posible área de mejora en cuanto a la capacitación, actualización y acceso a la información[cite: 64].
+* [cite_start]El subproceso "Atención en el control de manifiestos de carga de salida en el complejo fronterizo Santa Rosa" obtuvo la calificación más baja de todos, con un puntaje de 3.54, lo que sugiere una necesidad urgente de revisión y mejora en ese punto específico del servicio[cite: 51].

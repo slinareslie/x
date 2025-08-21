@@ -1,15 +1,1 @@
-@echo off
-REM Cambiar al directorio donde están las carpetas
-cd /d "C:\ruta\a\tu\carpeta\principal"
-
-REM Recorrer todos los archivos .xlsx de "excel nuevo"
-for %%F in ("excel nuevo\*.xlsx") do (
-    echo Moviendo %%F a excel base...
-    move "%%F" "excel base\"
-
-    echo Ejecutando script PowerShell...
-    powershell -ExecutionPolicy Bypass -File "ruta\al\script.ps1"
-)
-
-echo Proceso completado.
-pause
+=RIGHT(A1, LEN(A1) - MIN(FIND({0,1,2,3,4,5,6,7,8,9}, A1 & "0123456789")) + 1)
